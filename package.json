@@ -5,7 +5,9 @@
   "license": "MIT",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "admin",
+    "api",
+    "ui"
   ],
   "scripts": {
     "ui": "yarn workspace @study-project/ui",
@@ -20,8 +22,6 @@
     "@fontsource/roboto": "^5.2.5",
     "@mui/icons-material": "^6.4.7",
     "@mui/material": "^6.4.7",
-    "@nestjs/config": "^4.0.1",
-    "@nestjs/typeorm": "^11.0.0",
     "concurrently": "^9.1.2",
     "path": "^0.12.7",
     "react-hook-form": "^7.54.2",
