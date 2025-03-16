@@ -2,26 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { GlobalHttpExceptionFilter } from './common/filters/globalException.filter';
 
 declare const module: any;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.setGlobalPrefix('api')
+  app.setGlobalPrefix('api');
 
   app.enableCors();
 
-  app.use(helmet( {
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: [`'self'`],
-        styleSrc: [`'self'`, `'unsafe-inline'`],
-        imgSrc: [`'self'`, 'data:', 'validator.swagger.io'],
-        scriptSrc: [`'self'`, `https: 'unsafe-inline'`],
-      },
-    },
-  }));
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
+
+  app.useGlobalFilters(new GlobalHttpExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle('Study Project')
