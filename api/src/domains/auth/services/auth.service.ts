@@ -7,7 +7,6 @@ import { UserAddDto } from 'src/domains/users/dto/userAdd.dto';
 import { EmailService } from 'src/domains/email/email.service';
 import { CodeService } from './code.service';
 import { VerifyDto } from '../dto/verify.dto';
-import { RegisterStatus } from 'src/common/enums/registerStatus.enum';
 
 @Injectable()
 export class AuthService {
@@ -18,17 +17,31 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async login(loginDto: LoginDto): Promise<string> {
+  async login(
+    loginDto: LoginDto,
+  ): Promise<{ status: string; accessToken?: string }> {
     const user = await this.userService.findUser(
       loginDto.email,
       loginDto.password,
     );
 
+    if (user.isVerified === false) {
+      const code = await this.codeService.findCodeByUser(user);
+      this.emailService.sendEmail(
+        user.email,
+        'Verify your email',
+        'register',
+        code,
+      );
+      return { status: 'not_verified' };
+    }
+
     const payload = { sub: user.id, username: user.email };
-    return await this.jwtService.signAsync(payload);
+    const accessToken = await this.jwtService.signAsync(payload);
+    return { status: 'success', accessToken: accessToken };
   }
 
-  async register(registerDto: RegisterDto): Promise<RegisterStatus> {
+  async register(registerDto: RegisterDto): Promise<void> {
     if (registerDto.password !== registerDto.confirmPassword) {
       throw new BadRequestException('Passwords do not match');
     }
@@ -36,18 +49,7 @@ export class AuthService {
     const user = await this.userService.findUserByEmail(registerDto.email);
 
     if (user) {
-      if (user.isVerified) {
-        throw new BadRequestException('Email already exists');
-      } else {
-        const code = await this.codeService.findCodeByUser(user);
-        this.emailService.sendEmail(
-          user.email,
-          'Verify your email',
-          'register',
-          code,
-        );
-        return RegisterStatus.NOT_VERIFIED;
-      }
+      throw new BadRequestException('Email already exists');
     } else {
       const userDto: UserAddDto = {
         email: registerDto.email,
@@ -68,8 +70,6 @@ export class AuthService {
           'register',
           code,
         );
-
-        return RegisterStatus.SUCCESS;
       } else {
         throw new BadRequestException('Register failed');
       }

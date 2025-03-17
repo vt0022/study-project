@@ -2,11 +2,13 @@ import {
   Column,
   Entity,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Role } from './role.entity';
 import { Code } from 'src/domains/auth/entities/code.entity';
+import { Post } from 'src/domains/posts/entities/post.entity';
 
 @Entity('user')
 export class User {
@@ -33,4 +35,7 @@ export class User {
 
   @OneToOne(() => Code, (code) => code.user)
   code: Code;
+
+  @OneToMany(() => Post, (post) => post.user)
+  posts: Post[];
 }

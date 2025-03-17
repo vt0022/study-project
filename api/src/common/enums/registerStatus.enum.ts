@@ -1,4 +1,4 @@
 export enum RegisterStatus {
-  SUCCESS = 'SUCCESS',
-  NOT_VERIFIED = 'NOT_VERIFIED',
+  Success = 'SUCCESS',
+  NotVerified = 'NOT_VERIFIED',
 }

@@ -11,6 +11,7 @@ ui/test
 admin-ui/.env
 api/.env
 ui/.env
+api/firebase-service-account.json
 dist 
 test
 .env 

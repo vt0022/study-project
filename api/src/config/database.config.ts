@@ -5,6 +5,7 @@ ConfigModule.forRoot();
 
 export const databaseConfig: TypeOrmModuleOptions = {
   type: 'postgres',
+  // TODO: Validate required config
   host: process.env.DB_HOST,
   port: parseInt(process.env.DB_PORT, 10),
   username: process.env.DB_USER,

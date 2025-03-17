@@ -3,6 +3,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalHttpExceptionFilter } from './common/filters/globalException.filter';
+import { ValidationPipe } from '@nestjs/common';
 
 declare const module: any;
 
@@ -18,6 +19,8 @@ async function bootstrap() {
       contentSecurityPolicy: false,
     }),
   );
+
+  app.useGlobalPipes(new ValidationPipe());
 
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
 

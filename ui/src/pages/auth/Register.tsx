@@ -1,24 +1,68 @@
 import {
+  Alert,
   Avatar,
   Box,
   Button,
-  Checkbox,
   Container,
-  FormControlLabel,
+  FormControl,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
+  InputLabel,
   Link,
+  OutlinedInput,
+  Snackbar,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Logo from "@/assets/images/register.png";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
+import AuthService from "@/services/authService";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
-  const { control, handleSubmit } = useForm();
+  const { control, handleSubmit, watch } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const navigate = useNavigate();
+
+  const [openNoti, setOpenNoti] = useState(false);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const onClickShowPassword = () => setShowPassword((show) => !show);
+
+  const onMouseDownPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
+  const onMouseUpPassword = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+  };
+
+  const onCloseSnackbar = () => {
+    setOpenNoti(false);
+  };
+
+  const onSubmit = async (data) => {
+    setLoading(true);
+    const response = await AuthService.register(
+      data.email,
+      data.password,
+      data.confirmPassword,
+      data.firstName,
+      data.lastName
+    );
+    setLoading(false);
+    if (response.statusCode !== 200) {
+      setOpenNoti(true);
+      setMessage(response.message);
+    } else {
+      navigate("/verify", { state: { email: data.email } });
+    }
   };
 
   return (
@@ -105,28 +149,113 @@ function Register() {
               )}
             />
 
-            <Controller
-              name="password"
-              control={control}
-              defaultValue=""
-              rules={{ required: "Please enter your password" }}
-              render={({ field, fieldState }) => (
-                <TextField
-                  {...field}
-                  id="outlined-basic"
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                  variant="outlined"
-                  fullWidth
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                />
-              )}
-            />
+            <FormControl variant="outlined">
+              <InputLabel htmlFor="outlined-adornment-password">
+                Password
+              </InputLabel>
+              <Controller
+                name="password"
+                control={control}
+                defaultValue=""
+                rules={{ required: "Please enter your password" }}
+                render={({ field, fieldState }) => (
+                  <>
+                    <OutlinedInput
+                      {...field}
+                      id="outline-adornment-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label={
+                              showPassword
+                                ? "hide the password"
+                                : "show the password"
+                            }
+                            onClick={onClickShowPassword}
+                            onMouseDown={onMouseDownPassword}
+                            onMouseUp={onMouseUpPassword}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                      label="Password"
+                      error={!!fieldState.error}
+                    />
+
+                    {fieldState.error && (
+                      <FormHelperText error>
+                        {fieldState.error.message}
+                      </FormHelperText>
+                    )}
+                  </>
+                )}
+              />
+            </FormControl>
+
+            <FormControl variant="outlined">
+              <InputLabel htmlFor="outlined-adornment-password">
+                Confirmation password
+              </InputLabel>
+              <Controller
+                name="confirmPassword"
+                control={control}
+                defaultValue=""
+                rules={{
+                  required: "Please enter your confirmation password",
+                  validate: (value) =>
+                    value === watch("password") || "Password do not match",
+                }}
+                render={({ field, fieldState }) => (
+                  <>
+                    <OutlinedInput
+                      {...field}
+                      id="outline-adornment-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      endAdornment={
+                        <InputAdornment position="end">
+                          <IconButton
+                            aria-label={
+                              showPassword
+                                ? "hide the password"
+                                : "show the password"
+                            }
+                            onClick={onClickShowPassword}
+                            onMouseDown={onMouseDownPassword}
+                            onMouseUp={onMouseUpPassword}
+                            edge="end"
+                          >
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      }
+                      label="Confirmation password"
+                      error={!!fieldState.error}
+                    />
+
+                    {fieldState.error && (
+                      <FormHelperText error>
+                        {fieldState.error.message}
+                      </FormHelperText>
+                    )}
+                  </>
+                )}
+              />
+            </FormControl>
           </Stack>
 
-          <Button variant="contained" fullWidth size="large" type="submit" sx={{mt: 5}}>
+          <Button
+            variant="contained"
+            fullWidth
+            size="large"
+            type="submit"
+            sx={{ mt: 5 }}
+            loading={loading}
+          >
             Register
           </Button>
         </form>
@@ -137,6 +266,22 @@ function Register() {
           </Link>
         </Box>
       </Box>
+
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        open={openNoti}
+        autoHideDuration={2000}
+        onClose={onCloseSnackbar}
+      >
+        <Alert
+          onClose={onCloseSnackbar}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }
