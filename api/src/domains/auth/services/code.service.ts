@@ -1,24 +1,20 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Code } from '../entities/code.entity';
-import { Repository } from 'typeorm';
 import { User } from 'src/domains/users/entities/user.entity';
 import { UserService } from 'src/domains/users/services/user.service';
+import { CodeRepository } from '../repositories/code.repository';
+
+const CODE_EXPIRES_IN = 1000 * 60 * 15;
 
 @Injectable()
 export class CodeService {
   constructor(
-    @InjectRepository(Code)
-    private codeRepository: Repository<Code>,
+    private codeRepository: CodeRepository,
     private userService: UserService,
   ) {}
 
   async findCodeByUser(user: User): Promise<string> {
-    const code = await this.codeRepository.findOne({
-      where: {
-        user: { id: user.id },
-      },
-    });
+    const code = await this.codeRepository.findCodeByUserId(user.id);
 
     if (code) {
       let codeValue: string;
@@ -29,9 +25,9 @@ export class CodeService {
       code.value = codeValue;
 
       code.createdAt = new Date(Date.now());
-      code.expiredAt = new Date(Date.now() + 1000 * 60 * 15);
+      code.expiredAt = new Date(Date.now() + CODE_EXPIRES_IN);
       code.isExpired = false;
-      await this.codeRepository.save(code);
+      await this.codeRepository.saveCode(code);
 
       return code.value;
     } else {
@@ -47,12 +43,10 @@ export class CodeService {
       throw new BadRequestException('User not found');
     }
 
-    const code = await this.codeRepository.findOne({
-      where: {
-        value: value,
-        user: { id: user.id },
-      },
-    });
+    const code = await this.codeRepository.findCodeByValueAndUserId(
+      value,
+      user.id,
+    );
 
     if (!code) {
       throw new BadRequestException('Invalid code');
@@ -67,7 +61,7 @@ export class CodeService {
       // Code not used and not expired
       if (code.expiredAt > new Date()) {
         code.isExpired = true;
-        await this.codeRepository.save(code);
+        await this.codeRepository.saveCode(code);
 
         user.isVerified = true;
         await this.userService.saveUser(user);
@@ -80,16 +74,16 @@ export class CodeService {
 
   async createCode(user: User): Promise<Code> {
     const code = new Code();
-    code.expiredAt = new Date(Date.now() + 1000 * 60 * 5);
+    code.expiredAt = new Date(Date.now() + CODE_EXPIRES_IN);
     code.user = user;
 
     let codeValue: string;
     do {
       codeValue = Math.floor(100000 + Math.random() * 900000).toString();
-    } while (await this.codeRepository.findOneBy({ value: codeValue }));
+    } while (await this.codeRepository.findCodeByValue(codeValue));
 
     code.value = codeValue;
 
-    return await this.codeRepository.save(code);
+    return await this.codeRepository.saveCode(code);
   }
 }

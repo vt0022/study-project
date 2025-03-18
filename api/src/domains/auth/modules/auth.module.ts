@@ -7,6 +7,7 @@ import { EmailModule } from 'src/domains/email/email.module';
 import { CodeService } from '../services/code.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Code } from '../entities/code.entity';
+import { CodeRepository } from '../repositories/code.repository';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { Code } from '../entities/code.entity';
     }),
     TypeOrmModule.forFeature([Code]),
   ],
-  providers: [AuthService, CodeService],
+  providers: [AuthService, CodeService, CodeRepository],
   controllers: [AuthController],
   exports: [AuthService],
 })

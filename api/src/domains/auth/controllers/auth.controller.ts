@@ -15,6 +15,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { VerifyDto } from '../dto/verify.dto';
+import { LoginStatus } from 'src/common/enums/loginStatus.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
   async login(@Body() loginDto: LoginDto) {
     const result = await this.authService.login(loginDto);
 
-    if (result.status === 'not_verified') {
+    if (result.status === LoginStatus.NotVerified) {
       return new ResponseDto(
         'success',
         HttpStatus.OK,
@@ -33,7 +34,7 @@ export class AuthController {
     }
 
     return new ResponseDto<{ accessToken: string }>(
-      'success',
+      LoginStatus.Success,
       HttpStatus.OK,
       'Login successfully',
       {

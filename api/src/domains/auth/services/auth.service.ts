@@ -7,6 +7,7 @@ import { UserAddDto } from 'src/domains/users/dto/userAdd.dto';
 import { EmailService } from 'src/domains/email/email.service';
 import { CodeService } from './code.service';
 import { VerifyDto } from '../dto/verify.dto';
+import { LoginStatus } from 'src/common/enums/loginStatus.enum';
 
 @Injectable()
 export class AuthService {
@@ -33,12 +34,12 @@ export class AuthService {
         'register',
         code,
       );
-      return { status: 'not_verified' };
+      return { status: LoginStatus.NotVerified };
     }
 
     const payload = { sub: user.id, username: user.email };
     const accessToken = await this.jwtService.signAsync(payload);
-    return { status: 'success', accessToken: accessToken };
+    return { status: LoginStatus.Success, accessToken: accessToken };
   }
 
   async register(registerDto: RegisterDto): Promise<void> {

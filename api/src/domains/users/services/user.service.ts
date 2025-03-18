@@ -3,32 +3,21 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
-import { Repository } from 'typeorm';
-import { Role } from '../entities/role.entity';
 import { UserAddDto } from '../dto/userAdd.dto';
+import { UserRepository } from '../repositories/user.repository';
+import { RoleRepository } from '../repositories/role.repository';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-
-    @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
+    private userRepository: UserRepository,
+    private roleRepository: RoleRepository,
   ) {}
 
   async findUser(email: string, password: string): Promise<User | null> {
-    const user = await this.userRepository.findOne({
-      where: {
-        email: email,
-      },
-      relations: {
-        role: true,
-      },
-    });
+    const user = await this.userRepository.findUserByEmail(email);
 
     if (!user) {
       throw new UnauthorizedException('Wrong email');
@@ -44,15 +33,11 @@ export class UserService {
   }
 
   async findUserByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findOneBy({
-      email: email,
-    });
+    return this.userRepository.findUserByEmail(email);
   }
 
   async createUser(userAddDto: UserAddDto, role: string): Promise<User> {
-    const userRole = await this.roleRepository.findOneBy({
-      name: role,
-    });
+    const userRole = await this.roleRepository.findRoleByName(role);
 
     if (!userRole) {
       throw new NotFoundException(`Role '${role}' not found`);
@@ -64,14 +49,18 @@ export class UserService {
     newUser.firstName = userAddDto.firstName;
     newUser.lastName = userAddDto.lastName;
     newUser.role = userRole;
-    return this.userRepository.save(newUser);
+    return this.userRepository.saveUser(newUser);
   }
 
   async saveUser(user: User): Promise<User> {
-    return await this.userRepository.save(user);
+    return await this.userRepository.saveUser(user);
   }
 
-  encryptPassWord(password: string) {
+  async findUserById(id: number): Promise<User | null> {
+    return await this.userRepository.findUserById(id);
+  }
+
+  private encryptPassWord(password: string) {
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(password, salt);
     return hash;

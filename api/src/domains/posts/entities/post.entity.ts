@@ -18,6 +18,9 @@ export class Post {
   @Column()
   views: number;
 
+  @Column()
+  isPrivate: boolean;
+
   @ManyToOne(() => User, (user) => user.posts)
   user: User;
 }

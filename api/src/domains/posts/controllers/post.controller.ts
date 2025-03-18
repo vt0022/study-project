@@ -6,11 +6,11 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { UploadService } from 'src/domains/upload/upload.service';
+import { UploadFirebaseService } from 'src/domains/upload/uploadFirebase.service';
 
 @Controller('posts')
 export class PostController {
-  constructor(private uploadService: UploadService) {}
+  constructor(private uploadFirebaseService: UploadFirebaseService) {}
 
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -27,8 +27,7 @@ export class PostController {
   @Post('/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-    const imageUrl = await this.uploadService.uploadFile(file);
+    const imageUrl = await this.uploadFirebaseService.uploadFile(file);
     return { url: imageUrl };
   }
 }
