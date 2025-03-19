@@ -24,13 +24,17 @@ import AuthService from "@/services/authService";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
-  const { control, handleSubmit, watch } = useForm();
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { isSubmitting },
+  } = useForm();
 
   const navigate = useNavigate();
 
   const [openNoti, setOpenNoti] = useState(false);
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const onClickShowPassword = () => setShowPassword((show) => !show);
@@ -48,7 +52,6 @@ function Register() {
   };
 
   const onSubmit = async (data) => {
-    setLoading(true);
     const response = await AuthService.register(
       data.email,
       data.password,
@@ -56,7 +59,6 @@ function Register() {
       data.firstName,
       data.lastName
     );
-    setLoading(false);
     if (response.statusCode !== 200) {
       setOpenNoti(true);
       setMessage(response.message);
@@ -254,7 +256,7 @@ function Register() {
             size="large"
             type="submit"
             sx={{ mt: 5 }}
-            loading={loading}
+            loading={isSubmitting}
           >
             Register
           </Button>

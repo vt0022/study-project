@@ -11,7 +11,7 @@ export const databaseMigrationConfig = new DataSource({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   entities: [__dirname + '/../domains/**/entities/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/../migrations/*.entity{.ts,.js}'],
+  migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   synchronize: false,
   logging: true,
 });

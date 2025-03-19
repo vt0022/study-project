@@ -25,7 +25,11 @@ import AuthService from "@/services/authService";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 function Login() {
-  const { control, handleSubmit } = useForm();
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm();
 
   const [openNoti, setOpenNoti] = useState(false);
   const [message, setMessage] = useState("");
@@ -33,9 +37,9 @@ function Login() {
 
   const onSubmit = async (data) => {
     const response = await AuthService.login(data.email, data.password);
-    if(response.statusCode !== 200) {
-        setOpenNoti(true);
-        setMessage(response.message);
+    if (response.statusCode !== 200) {
+      setOpenNoti(true);
+      setMessage(response.message);
     }
   };
 
@@ -171,7 +175,13 @@ function Login() {
               </Link>
             </Box>
 
-            <Button variant="contained" fullWidth size="large" type="submit">
+            <Button
+              variant="contained"
+              fullWidth
+              size="large"
+              type="submit"
+              loading={isSubmitting}
+            >
               Log in
             </Button>
           </form>

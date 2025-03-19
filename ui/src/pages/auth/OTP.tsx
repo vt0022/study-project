@@ -30,7 +30,6 @@ function OTP() {
 
   const [timeLeft, setTimeLeft] = useState(15 * 60 - 1);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
-  const [loading, setLoading] = useState(false);
   const [openNoti, setOpenNoti] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -147,7 +146,7 @@ function OTP() {
               <Button
                 variant="contained"
                 size="large"
-                loading={loading}
+                loading={isSubmitting}
                 type="submit"
               >
                 Verify

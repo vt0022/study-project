@@ -15,10 +15,10 @@ export class Post {
   @Column({ type: 'timestamp', nullable: true })
   updatedAt: Date;
 
-  @Column()
+  @Column({ default: 0 })
   views: number;
 
-  @Column()
+  @Column({ default: false })
   isPrivate: boolean;
 
   @ManyToOne(() => User, (user) => user.posts)

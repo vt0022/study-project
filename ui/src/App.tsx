@@ -1,7 +1,7 @@
 import "./App.css";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
-import MainRoutes from "./routes/main-routes";
+import MainRoutes from "./routes/RootRoutes";
 import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
