@@ -8,6 +8,14 @@ import { EmailService } from 'src/domains/email/email.service';
 import { CodeService } from './code.service';
 import { VerifyDto } from '../dto/verify.dto';
 import { LoginStatus } from 'src/common/enums/loginStatus.enum';
+import { config } from 'dotenv';
+import { validate } from 'src/common/validators/env.validator';
+import { User } from 'src/domains/users/entities/user.entity';
+import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
+
+config();
+
+const validatedConfig = validate(process.env);
 
 @Injectable()
 export class AuthService {
@@ -18,9 +26,12 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async login(
-    loginDto: LoginDto,
-  ): Promise<{ status: string; accessToken?: string }> {
+  async login(loginDto: LoginDto): Promise<{
+    status: string;
+    accessToken?: string;
+    refreshToken?: string;
+    user?: UserProfileDto;
+  }> {
     const user = await this.userService.findUser(
       loginDto.email,
       loginDto.password,
@@ -37,9 +48,22 @@ export class AuthService {
       return { status: LoginStatus.NotVerified };
     }
 
-    const payload = { sub: user.id, username: user.email };
-    const accessToken = await this.jwtService.signAsync(payload);
-    return { status: LoginStatus.Success, accessToken: accessToken };
+    const accessToken = await this.generateToken(true, user);
+    const refreshToken = await this.generateToken(false, user);
+
+    const userProfileDto = new UserProfileDto();
+    userProfileDto.id = user.id;
+    userProfileDto.email = user.email;
+    userProfileDto.firstName = user.firstName;
+    userProfileDto.lastName = user.lastName;
+    userProfileDto.role = user.role;
+
+    return {
+      status: LoginStatus.Success,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: userProfileDto,
+    };
   }
 
   async register(registerDto: RegisterDto): Promise<void> {
@@ -77,7 +101,52 @@ export class AuthService {
     }
   }
 
-  async verify(verifyDto: VerifyDto): Promise<void> {
-    await this.codeService.verifyCode(verifyDto.email, verifyDto.code);
+  async verify(verifyDto: VerifyDto): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: UserProfileDto;
+  }> {
+    const user = await this.codeService.verifyCode(
+      verifyDto.email,
+      verifyDto.code,
+    );
+
+    const accessToken = await this.generateToken(true, user);
+    const refreshToken = await this.generateToken(false, user);
+
+    const userProfileDto = new UserProfileDto();
+    userProfileDto.id = user.id;
+    userProfileDto.email = user.email;
+    userProfileDto.firstName = user.firstName;
+    userProfileDto.lastName = user.lastName;
+    userProfileDto.role = user.role;
+
+    return {
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: userProfileDto,
+    };
+  }
+
+  private async generateToken(isAccess: boolean, user: User): Promise<string> {
+    // Access token
+    if (isAccess) {
+      const payload = {
+        sub: user.id,
+        email: user.email,
+        role: user?.role.name,
+      };
+      const accessToken = await this.jwtService.signAsync(payload, {
+        expiresIn: validatedConfig.ACCESS_TOKEN_EXPIRES_IN,
+      });
+      return accessToken;
+    } else {
+      // Refresh token
+      const payload = { sub: user.id };
+      const refreshToken = await this.jwtService.signAsync(payload, {
+        expiresIn: validatedConfig.REFRESH_TOKEN_EXPIRES_IN,
+      });
+      return refreshToken;
+    }
   }
 }

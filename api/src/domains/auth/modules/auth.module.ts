@@ -8,6 +8,12 @@ import { CodeService } from '../services/code.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Code } from '../entities/code.entity';
 import { CodeRepository } from '../repositories/code.repository';
+import { config } from 'dotenv';
+import { validate } from 'src/common/validators/env.validator';
+
+config();
+
+const validatedConfig = validate(process.env);
 
 @Module({
   imports: [
@@ -15,8 +21,7 @@ import { CodeRepository } from '../repositories/code.repository';
     EmailModule,
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+      secret: validatedConfig.JWT_SECRET,
     }),
     TypeOrmModule.forFeature([Code]),
   ],

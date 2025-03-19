@@ -36,7 +36,7 @@ export class CodeService {
     }
   }
 
-  async verifyCode(email: string, value: string): Promise<void> {
+  async verifyCode(email: string, value: string): Promise<User> {
     const user = await this.userService.findUserByEmail(email);
 
     if (!user) {
@@ -65,6 +65,8 @@ export class CodeService {
 
         user.isVerified = true;
         await this.userService.saveUser(user);
+
+        return user;
       } else {
         throw new BadRequestException('Code expired');
         // return VerifyStatus.CODE_EXPIRED;

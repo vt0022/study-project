@@ -2,13 +2,15 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { GlobalHttpExceptionFilter } from './common/filters/globalException.filter';
+import { GlobalHttpExceptionFilter } from './common/filters/globalHttpException.filter';
 import { ValidationPipe } from '@nestjs/common';
-
-declare const module: any;
+import cookieParser from 'cookie-parser';
+import { LoggerFactory } from './common/loggers/loggerFactory';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: LoggerFactory('Study Project'),
+  });
 
   app.setGlobalPrefix('api');
 
@@ -24,12 +26,14 @@ async function bootstrap() {
 
   app.useGlobalFilters(new GlobalHttpExceptionFilter());
 
+  app.use(cookieParser());
+
   const config = new DocumentBuilder()
     .setTitle('Study Project')
     .setDescription('API description of the study project')
     .setVersion('1.0')
     .addTag('study')
-    .addBearerAuth()
+    .addCookieAuth('access_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -45,10 +49,5 @@ async function bootstrap() {
   });
 
   await app.listen(process.env.PORT ?? 3000);
-
-  // if (module.hot) {
-  //   module.hot.accept();
-  //   module.hot.dispose(() => app.close());
-  // }
 }
 bootstrap();

@@ -8,6 +8,9 @@ import { UserModule } from './domains/users/modules/user.module';
 import { PostModule } from './domains/posts/modules/post.module';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './common/validators/env.validator';
+import { APP_GUARD } from '@nestjs/core';
+import { RoleGuard } from './common/guards/role.guard';
+import { AuthGuard } from './common/guards/auth.guard';
 
 @Module({
   imports: [
@@ -18,6 +21,13 @@ import { validate } from './common/validators/env.validator';
     PostModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: AuthGuard },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
+    },
+  ],
 })
 export class AppModule {}

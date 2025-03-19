@@ -1,13 +1,13 @@
-export class UserDto {
+import { Role } from '../entities/role.entity';
+
+export class UserProfileDto {
   id: number;
 
   email: string;
-
-  password: string;
 
   firstName: string;
 
   lastName: string;
 
-  role: string;
+  role: Role;
 }

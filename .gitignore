@@ -12,6 +12,7 @@ admin-ui/.env
 api/.env
 ui/.env
 api/firebase-service-account.json
+api/src/logs/*
 dist 
 test
 .env 
