@@ -3,28 +3,34 @@ import { Module } from '@nestjs/common';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { EmailService } from './email.service';
 import { join } from 'path';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    MailerModule.forRoot({
-      transport: {
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT, 10) || 25,
-        secure: false,
-        auth: {
-          user: process.env.EMAIL_USERNAME,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-      },
-      defaults: {
-        from: '"HiFi" <no-reply@example.com>',
-      },
-      template: {
-        dir: join(__dirname, 'templates'),
-        adapter: new HandlebarsAdapter(),
-        options: {
-          strict: true,
-        },
+    MailerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          transport: {
+            host: configService.get<string>('EMAIL_HOST'),
+            port: configService.get<number>('EMAIL_PORT'),
+            secure: false,
+            auth: {
+              user: configService.get<string>('EMAIL_USERNAME'),
+              pass: configService.get<string>('EMAIL_PASSWORD'),
+            },
+          },
+          defaults: {
+            from: '"HiFi" <no-reply@example.com>',
+          },
+          template: {
+            dir: join(__dirname, 'templates'),
+            adapter: new HandlebarsAdapter(),
+            options: {
+              strict: true,
+            },
+          },
+        };
       },
     }),
   ],

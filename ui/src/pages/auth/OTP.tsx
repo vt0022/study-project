@@ -12,7 +12,7 @@ import {
 import React, { useEffect, useState } from "react";
 import Logo from "@/assets/images/verify.png";
 import { Controller, useForm } from "react-hook-form";
-import AuthService from "@/services/authService";
+import authService from "@/services/authService";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function OTP() {
@@ -67,7 +67,7 @@ function OTP() {
   const seconds = timeLeft % 60;
 
   const onSubmit = async (data) => {
-    const response = await AuthService.verify(email, data.code);
+    const response = await authService.verify(email, data.code);
     if (response.statusCode !== 200) {
       setOpenNoti(true);
       setMessage(response.message);

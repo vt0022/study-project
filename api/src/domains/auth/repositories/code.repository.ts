@@ -1,15 +1,14 @@
-import { Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Code } from '../entities/code.entity';
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable } from '@nestjs/common';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class CodeRepository extends Repository<Code> {
   constructor(
-    @InjectRepository(Code)
-    private codeRepository: Repository<Code>,
+    @InjectEntityManager() private readonly entityManager: EntityManager,
   ) {
-    super(codeRepository.target, codeRepository.manager);
+    super(Code, entityManager);
   }
 
   async findCodeByUserId(userId: number): Promise<Code | null> {

@@ -37,6 +37,9 @@ class EnvironmentVariable {
 
   @IsString()
   EMAIL_PASSWORD: string;
+
+  @IsString()
+  FIREBASE_STORAGE_BUCKET: string;
 }
 
 export function validate(config: Record<string, unknown>) {
@@ -67,5 +70,8 @@ export function validate(config: Record<string, unknown>) {
     ACCESS_TOKEN_EXPIRES_IN: validatedConfig.ACCESS_TOKEN_EXPIRES_IN || '3600s',
     REFRESH_TOKEN_EXPIRES_IN:
       validatedConfig.REFRESH_TOKEN_EXPIRES_IN || '86400s',
+    FIREBASE_STORAGE_BUCKET:
+      validatedConfig.FIREBASE_STORAGE_BUCKET ||
+      'study-project-a5e85.firebasestorage.app',
   };
 }

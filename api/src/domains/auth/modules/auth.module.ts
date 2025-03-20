@@ -8,20 +8,20 @@ import { CodeService } from '../services/code.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Code } from '../entities/code.entity';
 import { CodeRepository } from '../repositories/code.repository';
-import { config } from 'dotenv';
-import { validate } from 'src/common/validators/env.validator';
-
-config();
-
-const validatedConfig = validate(process.env);
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     UserModule,
     EmailModule,
-    JwtModule.register({
-      global: true,
-      secret: validatedConfig.JWT_SECRET,
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => {
+        return {
+          global: true,
+          secret: configService.get<string>('JWT_SECRET'),
+        };
+      },
+      inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Code]),
   ],

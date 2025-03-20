@@ -20,7 +20,7 @@ import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Logo from "@/assets/images/register.png";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import AuthService from "@/services/authService";
+import authService from "@/services/authService";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
@@ -52,7 +52,7 @@ function Register() {
   };
 
   const onSubmit = async (data) => {
-    const response = await AuthService.register(
+    const response = await authService.register(
       data.email,
       data.password,
       data.confirmPassword,

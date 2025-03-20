@@ -1,8 +1,8 @@
-import { publicAxios } from "../config/axios";
+import { axiosClient } from "../config/axios";
 
-const AuthService = {
+const authService = {
   login: async (email: string, password: string) => {
-    return publicAxios
+    return axiosClient
       .post("/auth/login", {
         email,
         password,
@@ -17,7 +17,7 @@ const AuthService = {
     firstName: string,
     lastName: string
   ) => {
-    return publicAxios
+    return axiosClient
       .post("/auth/register", {
         email,
         password,
@@ -29,10 +29,14 @@ const AuthService = {
   },
 
   verify: async (email: string, code: string) => {
-    return publicAxios
+    return axiosClient
       .post("/auth/verify", { email, code })
       .then((response) => response.data);
   },
+
+  refreshToken: async () => {
+    return axiosClient.post("/auth/refresh").then((response) => response.data);
+  },
 };
 
-export default AuthService;
+export default authService;

@@ -21,10 +21,13 @@ import {
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import Logo from "@/assets/images/login.png";
-import AuthService from "@/services/authService";
+import authService from "@/services/authService";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
+
   const {
     control,
     handleSubmit,
@@ -36,10 +39,12 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const onSubmit = async (data) => {
-    const response = await AuthService.login(data.email, data.password);
+    const response = await authService.login(data.email, data.password);
     if (response.statusCode !== 200) {
       setOpenNoti(true);
       setMessage(response.message);
+    } else {
+      navigate("/home");
     }
   };
 

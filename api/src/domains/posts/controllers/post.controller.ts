@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -13,6 +14,7 @@ import { UploadFirebaseService } from 'src/domains/upload/uploadFirebase.service
 import { PostAddDto } from '../dto/postAdd.dto';
 import { PostService } from '../services/post.service';
 import { UploadSupabaseService } from 'src/domains/upload/uploadSupabase.service';
+import { Roles } from 'src/common/decorators/role.decorator';
 
 @Controller('posts')
 export class PostController {
@@ -38,15 +40,34 @@ export class PostController {
   @Post('/upload')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    const imageUrl = await this.uploadSupabaseService.uploadFile(file);
+    const imageUrl = await this.uploadFirebaseService.uploadFile(file);
     return { url: imageUrl };
   }
 
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @Post('/')
   async createPost(
     @CurrentUser('id') userId: number,
     @Body() postAddDto: PostAddDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     await this.postService.createPost(userId, postAddDto);
+  }
+
+  @Get('/test')
+  @Roles('user')
+  async testPost() {
+    return { message: 'Hi' };
   }
 }

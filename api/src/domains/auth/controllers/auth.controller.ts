@@ -4,7 +4,7 @@ import {
   Get,
   HttpStatus,
   Post,
-  Request,
+  Req,
   Res,
 } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
@@ -14,11 +14,13 @@ import { ResponseDto } from 'src/common/dto/response.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { VerifyDto } from '../dto/verify.dto';
 import { LoginStatus } from 'src/common/enums/loginStatus.enum';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ResponseStatus } from 'src/common/enums/responseStatus.enum';
 import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
 import { ApiCookieAuth } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
+
+const REFRESH_TOKEN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 @Controller('auth')
 export class AuthController {
@@ -45,10 +47,14 @@ export class AuthController {
     response.cookie('access_token', result.accessToken, {
       httpOnly: true,
       sameSite: 'none',
+      secure: true,
     });
+
     response.cookie('refresh_token', result.refreshToken, {
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
+      secure: true,
       path: '/api/auth/refresh',
     });
 
@@ -86,10 +92,14 @@ export class AuthController {
     response.cookie('access_token', result.accessToken, {
       httpOnly: true,
       sameSite: 'none',
+      secure: true,
     });
+
     response.cookie('refresh_token', result.refreshToken, {
+      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
+      secure: true,
       path: '/api/auth/refresh',
     });
 
@@ -104,22 +114,27 @@ export class AuthController {
   }
 
   @Public()
-  @Get('/test/public')
-  testPublic() {
-    return { message: 'This is public' };
-  }
+  @Post('/refresh')
+  async refresh(
+    @Req() request: Request & { cookies: any },
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const refreshToken = request.cookies?.refresh_token;
 
-  @ApiCookieAuth()
-  @Roles('admin')
-  @Get('/test/admin')
-  testAdmin(@Request() req) {
-    return req.user;
-  }
+    const accessToken =
+      await this.authService.generateNewAccesstoken(refreshToken);
 
-  @ApiCookieAuth()
-  @Roles('user')
-  @Get('/test/user')
-  testUser(@Request() req) {
-    return req.user;
+    // Set up cookie
+    response.cookie('access_token', accessToken, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    });
+
+    return new ResponseDto<{ accessToken: string }>(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Renew access token successfully',
+    );
   }
 }

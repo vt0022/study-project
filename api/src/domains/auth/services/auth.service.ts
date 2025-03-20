@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/domains/users/services/user.service';
 import { LoginDto } from '../dto/login.dto';
@@ -12,10 +16,7 @@ import { config } from 'dotenv';
 import { validate } from 'src/common/validators/env.validator';
 import { User } from 'src/domains/users/entities/user.entity';
 import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
-
-config();
-
-const validatedConfig = validate(process.env);
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,7 @@ export class AuthService {
     private jwtService: JwtService,
     private codeService: CodeService,
     private emailService: EmailService,
+    private configService: ConfigService,
   ) {}
 
   async login(loginDto: LoginDto): Promise<{
@@ -128,6 +130,37 @@ export class AuthService {
     };
   }
 
+  async generateNewAccesstoken(refreshToken: string | null): Promise<string> {
+    if (!refreshToken) {
+      throw new BadRequestException('No refresh token');
+    }
+
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+
+      const user = await this.userService.findUserById(payload.sub);
+
+      if (!user) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      const accessTokenPayload = {
+        sub: user.id,
+        email: user.email,
+        role: user?.role.name,
+      };
+
+      const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
+        expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
+      });
+      return accessToken;
+    } catch {
+      throw new BadRequestException('Invalid refresh token');
+    }
+  }
+
   private async generateToken(isAccess: boolean, user: User): Promise<string> {
     // Access token
     if (isAccess) {
@@ -137,14 +170,14 @@ export class AuthService {
         role: user?.role.name,
       };
       const accessToken = await this.jwtService.signAsync(payload, {
-        expiresIn: validatedConfig.ACCESS_TOKEN_EXPIRES_IN,
+        expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
       });
       return accessToken;
     } else {
       // Refresh token
       const payload = { sub: user.id };
       const refreshToken = await this.jwtService.signAsync(payload, {
-        expiresIn: validatedConfig.REFRESH_TOKEN_EXPIRES_IN,
+        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
       });
       return refreshToken;
     }

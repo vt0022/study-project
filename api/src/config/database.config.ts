@@ -1,18 +1,15 @@
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { config } from 'dotenv';
-import { validate } from 'src/common/validators/env.validator';
 
-config();
-
-const validatedConfig = validate(process.env);
-
-export const databaseConfig: TypeOrmModuleOptions = {
+export const databaseConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => ({
   type: 'postgres',
-  host: validatedConfig.DB_HOST,
-  port: validatedConfig.DB_PORT,
-  username: validatedConfig.DB_USER,
-  password: validatedConfig.DB_PASS,
-  database: validatedConfig.DB_NAME,
+  host: configService.get<string>('DB_HOST'),
+  port: configService.get<number>('DB_PORT'),
+  username: configService.get<string>('DB_USER'),
+  password: configService.get<string>('DB_PASS'),
+  database: configService.get<string>('DB_NAME'),
   entities: [__dirname + '/../domains/**/entities/*.entity{.ts,.js}'],
   synchronize: false,
-};
+});

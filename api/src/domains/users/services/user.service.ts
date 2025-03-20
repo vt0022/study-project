@@ -1,7 +1,7 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
@@ -20,7 +20,7 @@ export class UserService {
     const user = await this.userRepository.findUserByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('Wrong email');
+      throw new BadRequestException('Wrong email');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -28,7 +28,7 @@ export class UserService {
     if (isMatch) {
       return user;
     } else {
-      throw new UnauthorizedException('Wrong password');
+      throw new BadRequestException('Wrong password');
     }
   }
 

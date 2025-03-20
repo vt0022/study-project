@@ -1,15 +1,15 @@
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Post } from '../entities/post.entity';
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class PostRepository extends Repository<Post> {
   constructor(
-    @InjectRepository(Post)
-    private postRepository: Repository<Post>,
+    @InjectEntityManager()
+    private entityManager: EntityManager,
   ) {
-    super(postRepository.target, postRepository.manager);
+    super(Post, entityManager);
   }
 
   async findPostById(id: number): Promise<Post | null> {
