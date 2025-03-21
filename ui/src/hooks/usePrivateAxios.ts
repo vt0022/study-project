@@ -25,7 +25,6 @@ export function usePrivateAxios() {
             // Get new access token
             const refreshCall = await AuthService.refreshToken();
 
-
             if (refreshCall.statusCode === 200) {
               // Retry
               return axiosClient(originalRequest);

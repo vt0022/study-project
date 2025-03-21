@@ -9,6 +9,7 @@ import {
 import { Role } from './role.entity';
 import { Code } from 'src/domains/auth/entities/code.entity';
 import { Post } from 'src/domains/posts/entities/post.entity';
+import { RefreshToken } from 'src/domains/auth/entities/refreshToken.entity';
 
 @Entity('user')
 export class User {
@@ -38,4 +39,7 @@ export class User {
 
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 }

@@ -15,16 +15,13 @@ export class Code {
   @Column({ unique: true })
   value: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
-
   @Column({
     type: 'timestamp',
   })
   expiredAt: Date;
 
   @Column({ default: false })
-  isExpired: boolean;
+  isUsed: boolean;
 
   @OneToOne(() => User, (user) => user.code)
   @JoinColumn()

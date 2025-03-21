@@ -21,6 +21,7 @@ import { ApiCookieAuth } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
 
 const REFRESH_TOKEN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
+const REFRESH_TOKEN_COOKIE_PATH = '/api/auth/refresh';
 
 @Controller('auth')
 export class AuthController {
@@ -55,7 +56,7 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-      path: '/api/auth/refresh',
+      path: REFRESH_TOKEN_COOKIE_PATH,
     });
 
     return new ResponseDto<{ user: UserProfileDto }>(

@@ -5,10 +5,12 @@ import { Outlet } from "react-router-dom";
 
 function MainLayout() {
   return (
-    <Box sx={{ display: "flex", width: "100vw", backgroundColor: "#f0f0f0" }}>
-      <Leftbar />
-      <Outlet />
-      <Rightbar />
+    <Box sx={{ width: "100vw", backgroundColor: "#f0f0f0", padding: '10px'}}>
+      <Box sx={{ display: "flex", width: {xs: "100vw", md: '80vw'}, backgroundColor: "#f0f0f0", margin:'auto' }}>
+        <Leftbar />
+        <Outlet />
+        <Rightbar />
+      </Box>
     </Box>
   );
 }

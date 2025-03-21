@@ -9,6 +9,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Code } from '../entities/code.entity';
 import { CodeRepository } from '../repositories/code.repository';
 import { ConfigService } from '@nestjs/config';
+import { RefreshToken } from '../entities/refreshToken.entity';
+import { RefreshTokenService } from '../services/refreshToken.service';
+import { RefreshTokenRepository } from '../repositories/refreshToken.repository';
 
 @Module({
   imports: [
@@ -23,9 +26,15 @@ import { ConfigService } from '@nestjs/config';
       },
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Code]),
+    TypeOrmModule.forFeature([Code, RefreshToken]),
   ],
-  providers: [AuthService, CodeService, CodeRepository],
+  providers: [
+    AuthService,
+    CodeService,
+    CodeRepository,
+    RefreshTokenService,
+    RefreshTokenRepository,
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })

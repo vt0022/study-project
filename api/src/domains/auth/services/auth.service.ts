@@ -17,16 +17,23 @@ import { validate } from 'src/common/validators/env.validator';
 import { User } from 'src/domains/users/entities/user.entity';
 import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
 import { ConfigService } from '@nestjs/config';
+import { RefreshTokenService } from './refreshToken.service';
 
 @Injectable()
 export class AuthService {
+  private accessTokenExpAt: string;
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
     private codeService: CodeService,
     private emailService: EmailService,
     private configService: ConfigService,
-  ) {}
+    private refreshTokenService: RefreshTokenService,
+  ) {
+    this.accessTokenExpAt = this.configService.get<string>(
+      'ACCESS_TOKEN_EXPIRES_IN',
+    );
+  }
 
   async login(loginDto: LoginDto): Promise<{
     status: string;
@@ -161,6 +168,8 @@ export class AuthService {
     }
   }
 
+  async logout(refreshToken: string): Promise<void> {}
+
   private async generateToken(isAccess: boolean, user: User): Promise<string> {
     // Access token
     if (isAccess) {
@@ -170,15 +179,13 @@ export class AuthService {
         role: user?.role.name,
       };
       const accessToken = await this.jwtService.signAsync(payload, {
-        expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
+        expiresIn: this.accessTokenExpAt,
       });
       return accessToken;
     } else {
       // Refresh token
-      const payload = { sub: user.id };
-      const refreshToken = await this.jwtService.signAsync(payload, {
-        expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRES_IN'),
-      });
+      const refreshToken =
+        await this.refreshTokenService.generateRefreshToken(user);
       return refreshToken;
     }
   }

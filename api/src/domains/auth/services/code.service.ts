@@ -24,9 +24,8 @@ export class CodeService {
 
       code.value = codeValue;
 
-      code.createdAt = new Date(Date.now());
       code.expiredAt = new Date(Date.now() + CODE_EXPIRES_IN);
-      code.isExpired = false;
+      code.isUsed = false;
       await this.codeRepository.saveCode(code);
 
       return code.value;
@@ -54,13 +53,13 @@ export class CodeService {
     }
 
     // Code used
-    if (code.isExpired) {
+    if (code.isUsed) {
       throw new BadRequestException('Code expired');
       //   return VerifyStatus.CODE_EXPIRED;
     } else {
       // Code not used and not expired
       if (code.expiredAt > new Date()) {
-        code.isExpired = true;
+        code.isUsed = true;
         await this.codeRepository.saveCode(code);
 
         user.isVerified = true;
