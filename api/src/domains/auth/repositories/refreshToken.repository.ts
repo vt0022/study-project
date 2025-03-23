@@ -17,6 +17,9 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
       where: {
         id: id,
       },
+      relations: {
+        user: true,
+      },
     });
   }
 
@@ -24,7 +27,7 @@ export class RefreshTokenRepository extends Repository<RefreshToken> {
     return await this.save(refreshToken);
   }
 
-  async revokeRefreshToken(refreshToken: RefreshToken): Promise<void> {
-    await this.save(refreshToken);
+  async deleteRefreshTokenById(id: string): Promise<void> {
+    await this.delete(id);
   }
 }

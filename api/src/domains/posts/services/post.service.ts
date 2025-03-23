@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { UserService } from 'src/domains/users/services/user.service';
+import { PostAddDto } from '../dto/postAdd.dto';
 import { Post } from '../entities/post.entity';
 import { PostRepository } from '../repositories/post.repository';
-import { PostAddDto } from '../dto/postAdd.dto';
-import { UserService } from 'src/domains/users/services/user.service';
 
 @Injectable()
 export class PostService {

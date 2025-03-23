@@ -1,6 +1,5 @@
 export class ResponseDto<T> {
   timestamp: string = new Date().toISOString();
-  // TODO: Use const
   status: string;
   statusCode: number;
   message: string;

@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import admin, { ServiceAccount } from 'firebase-admin';
 import * as FirebaseServiceAccount from '../../../firebase-service-account.json';
 import { IUploadService } from './upload.service';
-import { config } from 'dotenv';
-import { validate } from 'src/common/validators/env.validator';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UploadFirebaseService implements IUploadService {

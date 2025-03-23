@@ -1,23 +1,20 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { LoginStatus } from 'src/common/enums/loginStatus.enum';
+import { EmailService } from 'src/domains/email/email.service';
+import { UserAddDto } from 'src/domains/users/dto/userAdd.dto';
+import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
+import { User } from 'src/domains/users/entities/user.entity';
 import { UserService } from 'src/domains/users/services/user.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
-import { UserAddDto } from 'src/domains/users/dto/userAdd.dto';
-import { EmailService } from 'src/domains/email/email.service';
-import { CodeService } from './code.service';
 import { VerifyDto } from '../dto/verify.dto';
-import { LoginStatus } from 'src/common/enums/loginStatus.enum';
-import { config } from 'dotenv';
-import { validate } from 'src/common/validators/env.validator';
-import { User } from 'src/domains/users/entities/user.entity';
-import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
-import { ConfigService } from '@nestjs/config';
+import { AccessTokenPayload } from '../interfaces/accessTokenPayload.interface';
+import { RefreshTokenPayload } from '../interfaces/refreshTokenPayload.interface';
+import { CodeService } from './code.service';
 import { RefreshTokenService } from './refreshToken.service';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class AuthService {
@@ -137,23 +134,51 @@ export class AuthService {
     };
   }
 
-  async generateNewAccesstoken(refreshToken: string | null): Promise<string> {
-    if (!refreshToken) {
+  async generateNewAccesstoken(
+    refreshTokenValue: string | null,
+  ): Promise<string> {
+    if (!refreshTokenValue) {
       throw new BadRequestException('No refresh token');
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-      });
+      const payload = await this.jwtService.verifyAsync<RefreshTokenPayload>(
+        refreshTokenValue,
+        {
+          secret: this.configService.get<string>('JWT_SECRET'),
+        },
+      );
 
+      // Find
+      const refreshToken = await this.refreshTokenService.findRefreshTokenById(
+        payload.jti,
+      );
+
+      if (!refreshToken) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      // Compare refresh token
+      // Incase change in db
+      const isMatch = await bcrypt.compare(
+        refreshTokenValue,
+        refreshToken.value,
+      );
+
+      // Token from cookie not match with token in db
+      if (!isMatch) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      // Get user
       const user = await this.userService.findUserById(payload.sub);
 
       if (!user) {
         throw new BadRequestException('Invalid refresh token');
       }
 
-      const accessTokenPayload = {
+      // Create new access token
+      const accessTokenPayload: AccessTokenPayload = {
         sub: user.id,
         email: user.email,
         role: user?.role.name,
@@ -168,12 +193,40 @@ export class AuthService {
     }
   }
 
-  async logout(refreshToken: string): Promise<void> {}
+  async logout(refreshTokenValue: string): Promise<void> {
+    if (refreshTokenValue) {
+      const payload =
+        this.jwtService.decode<RefreshTokenPayload>(refreshTokenValue);
+
+      // Find
+      const refreshToken = await this.refreshTokenService.findRefreshTokenById(
+        payload.jti,
+      );
+
+      if (!refreshToken) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      // Compare refresh token
+      // Incase change in db
+      const isMatch = await bcrypt.compare(
+        refreshTokenValue,
+        refreshToken.value,
+      );
+
+      // Token from cookie not match with token in db
+      if (!isMatch) {
+        throw new BadRequestException('Invalid refresh token');
+      }
+
+      await this.refreshTokenService.deleteRefreshTokenById(payload.jti);
+    }
+  }
 
   private async generateToken(isAccess: boolean, user: User): Promise<string> {
     // Access token
     if (isAccess) {
-      const payload = {
+      const payload: AccessTokenPayload = {
         sub: user.id,
         email: user.email,
         role: user?.role.name,

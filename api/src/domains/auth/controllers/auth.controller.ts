@@ -1,27 +1,15 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Post,
-  Req,
-  Res,
-} from '@nestjs/common';
-import { AuthService } from '../services/auth.service';
-import { LoginDto } from '../dto/login.dto';
-import { Roles } from 'src/common/decorators/role.decorator';
-import { ResponseDto } from 'src/common/dto/response.dto';
-import { RegisterDto } from '../dto/register.dto';
-import { VerifyDto } from '../dto/verify.dto';
-import { LoginStatus } from 'src/common/enums/loginStatus.enum';
+import { Body, Controller, HttpStatus, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { Public } from 'src/common/decorators/public.decorator';
+import { ResponseDto } from 'src/common/dto/response.dto';
+import { LoginStatus } from 'src/common/enums/loginStatus.enum';
 import { ResponseStatus } from 'src/common/enums/responseStatus.enum';
 import { UserProfileDto } from 'src/domains/users/dto/userProfile.dto';
-import { ApiCookieAuth } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators/public.decorator';
-
-const REFRESH_TOKEN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
-const REFRESH_TOKEN_COOKIE_PATH = '/api/auth/refresh';
+import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
+import { VerifyDto } from '../dto/verify.dto';
+import { AuthService } from '../services/auth.service';
+import { Constants } from 'src/common/constants/constant';
 
 @Controller('auth')
 export class AuthController {
@@ -52,11 +40,11 @@ export class AuthController {
     });
 
     response.cookie('refresh_token', result.refreshToken, {
-      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE,
+      maxAge: Constants.REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-      path: REFRESH_TOKEN_COOKIE_PATH,
+      path: Constants.REFRESH_TOKEN_COOKIE_PATH,
     });
 
     return new ResponseDto<{ user: UserProfileDto }>(
@@ -82,6 +70,39 @@ export class AuthController {
   }
 
   @Public()
+  @Post('/logout')
+  async logout(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    // Revoke from database
+    const refreshToken = request.cookies?.refresh_token;
+
+    await this.authService.logout(refreshToken);
+
+    // Delete from cookies
+    // Must match all options when set up
+    response.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    });
+
+    response.clearCookie('refresh_token', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+      path: Constants.REFRESH_TOKEN_COOKIE_PATH,
+    });
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Logout successfully.',
+    );
+  }
+
+  @Public()
   @Post('/verify')
   async verify(
     @Body() verifyDto: VerifyDto,
@@ -97,7 +118,7 @@ export class AuthController {
     });
 
     response.cookie('refresh_token', result.refreshToken, {
-      maxAge: REFRESH_TOKEN_COOKIE_MAX_AGE,
+      maxAge: Constants.REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
       secure: true,
