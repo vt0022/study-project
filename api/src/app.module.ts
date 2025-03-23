@@ -12,6 +12,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { RoleGuard } from './common/guards/role.guard';
 import { AuthGuard } from './common/guards/auth.guard';
 import { JwtModule } from '@nestjs/jwt';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -27,6 +28,17 @@ import { JwtModule } from '@nestjs/jwt';
         return {
           global: true,
           secret: configService.get<string>('JWT_SECRET'),
+        };
+      },
+      inject: [ConfigService],
+    }),
+    BullModule.forRootAsync({
+      useFactory: (configService: ConfigService) => {
+        return {
+          connection: {
+            host: configService.get<string>('REDIS_HOST'),
+            port: configService.get<number>('REDIS_PORT'),
+          },
         };
       },
       inject: [ConfigService],

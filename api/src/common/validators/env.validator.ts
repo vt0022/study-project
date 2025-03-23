@@ -40,6 +40,12 @@ class EnvironmentVariable {
 
   @IsString()
   FIREBASE_STORAGE_BUCKET: string;
+
+  @IsString()
+  REDIS_HOST: string;
+
+  @IsNumber()
+  REDIS_PORT: number;
 }
 
 export function validate(config: Record<string, unknown>) {
@@ -73,5 +79,7 @@ export function validate(config: Record<string, unknown>) {
     FIREBASE_STORAGE_BUCKET:
       validatedConfig.FIREBASE_STORAGE_BUCKET ||
       'study-project-a5e85.firebasestorage.app',
+    REDIS_HOST: validatedConfig.REDIS_HOST || 'localhost',
+    REDIS_PORT: validatedConfig.REDIS_PORT || 6379,
   };
 }
