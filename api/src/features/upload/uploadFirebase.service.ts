@@ -6,6 +6,7 @@ import { IUploadService } from './upload.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class UploadFirebaseService implements IUploadService {
@@ -42,6 +43,28 @@ export class UploadFirebaseService implements IUploadService {
         resolve(publicUrl);
       });
       blobStream.end(file.buffer);
+    });
+  }
+
+  async downloadFile(fileUrl: string): Promise<File> {
+    const bucket = admin.storage().bucket();
+
+    // Get file name
+    const filename = fileUrl.split('/').pop();
+
+    // Create temp file
+    const tempFile = path.join('/tmp', filename);
+
+    const blob = bucket.file(filename);
+    const blobStream = blob.createReadStream();
+
+    return new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(tempFile);
+
+      blobStream.pipe(writeStream);
+
+      writeStream.on('finish', () => resolve(tempFile));
+      writeStream.on('error', (error) => reject(error));
     });
   }
 

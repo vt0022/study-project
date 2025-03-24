@@ -17,4 +17,9 @@ export class ThumbnailConsumer extends WorkerHost {
       }
     }
   }
+
+  generateThumbnail(fileUrl) {
+    // Generate thumbnail
+    
+  }
 }
