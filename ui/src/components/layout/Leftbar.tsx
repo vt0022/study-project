@@ -42,7 +42,7 @@ function Leftbar() {
                     })}
                 </List>
 
-                <Button variant="contained" color="primary" onClick={onLogout}>
+                <Button variant="contained" color="default" onClick={onLogout}>
                     Log out
                 </Button>
 
