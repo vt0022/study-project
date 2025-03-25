@@ -7,9 +7,17 @@ import { UploadModule } from 'src/features/upload/upload.module';
 import { PostRepository } from '../repositories/post.repository';
 import { UserModule } from 'src/features/users/modules/user.module';
 import { UploadMiddleware } from 'src/common/middlewares/upload.middleware';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post]), UploadModule, UserModule],
+  imports: [
+    TypeOrmModule.forFeature([Post]),
+    BullModule.registerQueue({
+      name: 'thumbnail',
+    }),
+    UploadModule,
+    UserModule,
+  ],
   controllers: [PostController],
   providers: [PostService, PostRepository],
   exports: [PostService],

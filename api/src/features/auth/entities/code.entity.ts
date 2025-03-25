@@ -15,12 +15,10 @@ export class Code {
   @Column({ unique: true })
   value: string;
 
-  @Column({
-    type: 'timestamp',
-  })
+  @Column({ name: 'expired_at', type: 'timestamp' })
   expiredAt: Date;
 
-  @Column({ default: false })
+  @Column({ name: 'is_used', default: false })
   isUsed: boolean;
 
   @OneToOne(() => User, (user) => user.code)

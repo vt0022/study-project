@@ -7,7 +7,7 @@ import { UserAddDto } from 'src/features/users/dto/userAdd.dto';
 import { UserProfileDto } from 'src/features/users/dto/userProfile.dto';
 import { User } from 'src/features/users/entities/user.entity';
 import { UserService } from 'src/features/users/services/user.service';
-import { RedisService } from '../../redis/redis.service';
+import { RedisService } from '../../../redis/redis.service';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { VerifyDto } from '../dto/verify.dto';
@@ -15,6 +15,7 @@ import { AccessTokenPayload } from '../interfaces/accessTokenPayload.interface';
 import { RefreshTokenPayload } from '../interfaces/refreshTokenPayload.interface';
 import { CodeService } from './code.service';
 import { RefreshTokenService } from './refreshToken.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
@@ -151,7 +152,7 @@ export class AuthService {
         await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
 
       // Check refresh token in black list
-      const isBanned = this.redisService.checkToken(payload.sub, refreshToken);
+      const isBanned = this.redisService.checkToken(payload.jti);
 
       if (isBanned) {
         throw new BadRequestException('Invalid refresh token');
@@ -218,7 +219,12 @@ export class AuthService {
           await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
 
         // Put refresh token in black list
-        this.redisService.setToken(payload.sub, refreshToken);
+        this.redisService.setToken(
+          payload.jti,
+          refreshToken,
+          payload.iat,
+          payload.exp,
+        );
       } catch {
         throw new BadRequestException('Invalid refresh token');
       }
@@ -242,8 +248,10 @@ export class AuthService {
       // const refreshToken =
       //   await this.refreshTokenService.generateRefreshToken(user);
       // return refreshToken;
+      const jti = uuidv4();
       const payload: RefreshTokenPayload = {
         sub: user.id,
+        jti: jti,
       };
       const refreshToken = await this.jwtService.signAsync(payload, {
         expiresIn: this.refreshTokenExpAt,

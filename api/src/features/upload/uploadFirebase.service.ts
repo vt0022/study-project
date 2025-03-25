@@ -1,20 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import admin, { ServiceAccount } from 'firebase-admin';
+import path from 'path';
+import { Readable } from 'stream';
 import * as FirebaseServiceAccount from '../../../firebase-service-account.json';
 import { IUploadService } from './upload.service';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import path from 'path';
-import * as fs from 'fs';
 
 @Injectable()
 export class UploadFirebaseService implements IUploadService {
-  constructor(
-    @InjectQueue('thumbnail')
-    private thumbnailQueue: Queue,
-    private configService: ConfigService,
-  ) {
+  constructor(private configService: ConfigService) {
     admin.initializeApp({
       credential: admin.credential.cert(<ServiceAccount>FirebaseServiceAccount),
       storageBucket: this.configService.get<string>('FIREBASE_STORAGE_BUCKET'),
@@ -46,31 +40,17 @@ export class UploadFirebaseService implements IUploadService {
     });
   }
 
-  async downloadFile(fileUrl: string): Promise<File> {
+  async downloadFile(
+    fileUrl: string,
+  ): Promise<{ file: Readable; fileName: string }> {
     const bucket = admin.storage().bucket();
 
     // Get file name
-    const filename = fileUrl.split('/').pop();
+    const fileName = fileUrl.split('/').pop();
 
-    // Create temp file
-    const tempFile = path.join('/tmp', filename);
-
-    const blob = bucket.file(filename);
+    const blob = bucket.file(fileName);
     const blobStream = blob.createReadStream();
 
-    return new Promise((resolve, reject) => {
-      const writeStream = fs.createWriteStream(tempFile);
-
-      blobStream.pipe(writeStream);
-
-      writeStream.on('finish', () => resolve(tempFile));
-      writeStream.on('error', (error) => reject(error));
-    });
-  }
-
-  async upload(fileUrl: string): Promise<any> {
-    await this.thumbnailQueue.add('thumbnail', {
-      fileUrl: fileUrl,
-    });
+    return { file: blobStream, fileName: fileName };
   }
 }

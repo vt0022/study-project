@@ -42,13 +42,13 @@ function Leftbar() {
                     })}
                 </List>
 
-                <Button variant="contained" color="default" onClick={onLogout}>
+                <Button variant="contained" color="info" onClick={onLogout}>
                     Log out
                 </Button>
 
-                <Button variant="contained" color="primary" onClick={onTest}>
+                {/* <Button variant="contained" color="primary" onClick={onTest}>
                     Test
-                </Button>
+                </Button> */}
             </Box>
         </Box>
     );

@@ -10,6 +10,7 @@ import { Role } from './role.entity';
 import { Code } from 'src/features/auth/entities/code.entity';
 import { Post } from 'src/features/posts/entities/post.entity';
 import { RefreshToken } from 'src/features/auth/entities/refreshToken.entity';
+import { Follower } from './follower.entity';
 
 @Entity('user')
 export class User {
@@ -22,13 +23,13 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ name: 'last_name' })
   firstName: string;
 
-  @Column({ nullable: true })
+  @Column({ name: 'last_name', nullable: true })
   lastName: string;
 
-  @Column({ default: false })
+  @Column({ name: 'is_verified', default: false })
   isVerified: boolean;
 
   @ManyToOne(() => Role, (role) => role.users)
@@ -42,4 +43,12 @@ export class User {
 
   @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  // One user is being followed by other users
+  @OneToMany(() => Follower, (follower) => follower.followedUser)
+  followers: Follower[];
+
+  // One user follows other users
+  @OneToMany(() => Follower, (follower) => follower.followingUser)
+  followings: Follower[];
 }

@@ -1,16 +1,13 @@
+import { ChatBubble, Favorite, Share } from "@mui/icons-material";
 import {
   Avatar,
   Box,
-  Fade,
   Grid2,
   IconButton,
-  Modal,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
 import moment from "moment";
-import Image from "@/assets/images/test.jpg";
-import { ChatBubble, Favorite, Share, Visibility } from "@mui/icons-material";
 
 type PostProps = {
   firstName: string;

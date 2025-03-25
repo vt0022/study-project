@@ -1,17 +1,11 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { UploadFirebaseService } from './uploadFirebase.service';
 import { UploadMiddleware } from 'src/common/middlewares/upload.middleware';
-import { BullModule } from '@nestjs/bullmq';
-import { ThumbnailConsumer } from './thumbnail.consumer';
+import { UploadFirebaseService } from './uploadFirebase.service';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({
-      name: 'thumbnail',
-    }),
-  ],
+  imports: [],
   controllers: [],
-  providers: [UploadFirebaseService, ThumbnailConsumer],
+  providers: [UploadFirebaseService],
   exports: [UploadFirebaseService],
 })
 export class UploadModule {

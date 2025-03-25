@@ -1,10 +1,10 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { GlobalHttpExceptionFilter } from './common/filters/globalHttpException.filter';
-import { ValidationPipe } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
 import { LoggerFactory } from './common/loggers/loggerFactory';
 
 async function bootstrap() {

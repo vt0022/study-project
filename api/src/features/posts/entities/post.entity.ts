@@ -1,5 +1,11 @@
 import { User } from 'src/features/users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Post {
@@ -9,17 +15,23 @@ export class Post {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'updated_at', type: 'timestamp', nullable: true })
   updatedAt: Date;
 
   @Column({ default: 0 })
   views: number;
 
-  @Column({ default: false })
+  @Column({ name: 'is_private', default: false })
   isPrivate: boolean;
+
+  @Column({ name: 'image_url' })
+  imageUrl: string;
+
+  @Column({ name: 'thumbnail_url', nullable: true })
+  thumbnailUrl: string;
 
   @ManyToOne(() => User, (user) => user.posts)
   user: User;

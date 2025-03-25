@@ -15,6 +15,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
+import { ExpressAdapter } from '@bull-board/express';
+import { BullBoardModule } from '@bull-board/nestjs';
+import { QueueModule } from './features/queues/queue.module';
 
 @Module({
   imports: [
@@ -41,9 +44,16 @@ import { createKeyv } from '@keyv/redis';
             host: configService.get<string>('REDIS_HOST'),
             port: configService.get<number>('REDIS_PORT'),
           },
+          defaultJobOptions: {
+            attempts: 3,
+          },
         };
       },
       inject: [ConfigService],
+    }),
+    BullBoardModule.forRoot({
+      route: '/queues',
+      adapter: ExpressAdapter,
     }),
     CacheModule.registerAsync({
       isGlobal: true,
@@ -61,6 +71,7 @@ import { createKeyv } from '@keyv/redis';
     AuthModule,
     UserModule,
     PostModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [
@@ -73,19 +84,3 @@ import { createKeyv } from '@keyv/redis';
   ],
 })
 export class AppModule {}
-
-// CacheModule.registerAsync({
-//       isGlobal: true,
-//       useFactory: (configService: ConfigService) => {
-//         const store = redisStore({
-//           socket: {
-//             host: configService.get<string>('REDIS_HOST'),
-//             port: configService.get<number>('REDIS_PORT'),
-//           },
-//         });
-//         return {
-//           store: store,
-//         };
-//       },
-//       inject: [ConfigService],
-//     }),

@@ -1,4 +1,6 @@
 export interface RefreshTokenPayload {
   sub: number;
-  jti?: string;
+  jti: string;
+  iat?: number;
+  exp?: number;
 }
