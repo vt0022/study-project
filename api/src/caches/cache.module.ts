@@ -7,4 +7,4 @@ import { RedisService } from './redis.service';
   controllers: [],
   exports: [RedisService],
 })
-export class RedisModule {}
+export class CacheModule {}

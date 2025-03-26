@@ -27,7 +27,7 @@ export class Post {
   @Column({ name: 'is_private', default: false })
   isPrivate: boolean;
 
-  @Column({ name: 'image_url' })
+  @Column({ name: 'image_url', nullable: true })
   imageUrl: string;
 
   @Column({ name: 'thumbnail_url', nullable: true })

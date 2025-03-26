@@ -17,7 +17,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { ExpressAdapter } from '@bull-board/express';
 import { BullBoardModule } from '@bull-board/nestjs';
-import { QueueModule } from './features/queues/queue.module';
+import { QueueModule } from './queues/queue.module';
 
 @Module({
   imports: [

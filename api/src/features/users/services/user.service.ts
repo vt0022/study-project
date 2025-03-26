@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
-import { UserAddDto } from '../dto/userAdd.dto';
+import { UserAddDto } from '../dto/addUser.dto';
 import { UserRepository } from '../repositories/user.repository';
 import { RoleRepository } from '../repositories/role.repository';
 

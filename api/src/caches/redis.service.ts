@@ -1,13 +1,22 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
+import { ICacheService } from './cache.service';
 
 @Injectable()
-export class RedisService {
+export class RedisService implements ICacheService {
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
   ) {}
+
+  async get<T>(key: string): Promise<T | null> {
+    return await this.cacheManager.get(key);
+  }
+
+  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+    await this.cacheManager.set(key, value, ttl);
+  }
 
   async setToken(
     jti: string,
@@ -15,16 +24,6 @@ export class RedisService {
     timeIssues: number,
     timeExpires: number,
   ): Promise<void> {
-    // Get
-    // const refreshTokenList: string[] =
-    //   (await this.cacheManager.get(`refresh_token:user:${userId}`)) || [];
-    // // Add
-    // refreshTokenList.push(refreshToken);
-    // Set
-    // await this.cacheManager.set(
-    //   `refresh_token:user:${userId}`,
-    //   refreshTokenList,
-    // );
     const data = {
       refreshToken: refreshToken,
       blacklisted_at: new Date().toLocaleString(),
@@ -39,16 +38,8 @@ export class RedisService {
   }
 
   async checkToken(jti: string): Promise<boolean> {
-    // Get
-    // const refreshTokenList: string[] = await this.cacheManager.get(
-    //   `refresh_token:user:${userId}`,
-    // );
     const data = await this.cacheManager.get(`refresh_token:${jti}`);
 
-    // Check
-    // return (
-    //   Array.isArray(refreshTokenList) && refreshTokenList.includes(refreshToken)
-    // );
     return data !== null;
   }
 }

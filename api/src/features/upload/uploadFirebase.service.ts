@@ -53,4 +53,13 @@ export class UploadFirebaseService implements IUploadService {
 
     return { file: blobStream, fileName: fileName };
   }
+
+  async deleteFile(fileUrl: string): Promise<void> {
+    const bucket = admin.storage().bucket();
+
+    // Get file name
+    const fileName = fileUrl.split('/').pop();
+
+    await bucket.file(fileName).delete();
+  }
 }

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmailModule } from 'src/features/email/email.module';
-import { RedisModule } from 'src/redis/redis.module';
+import { CacheModule } from 'src/caches/cache.module';
 import { UserModule } from 'src/features/users/modules/user.module';
 import { AuthController } from '../controllers/auth.controller';
 import { Code } from '../entities/code.entity';
@@ -28,7 +28,7 @@ import { RefreshTokenService } from '../services/refreshToken.service';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Code, RefreshToken]),
-    RedisModule,
+    CacheModule,
   ],
   providers: [
     AuthService,

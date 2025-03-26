@@ -23,7 +23,7 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ name: 'last_name' })
+  @Column({ name: 'first_name' })
   firstName: string;
 
   @Column({ name: 'last_name', nullable: true })
