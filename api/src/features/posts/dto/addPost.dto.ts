@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsString } from 'class-validator';
 
 export class AddPostDto {
@@ -8,7 +8,7 @@ export class AddPostDto {
   content: string;
 
   @ApiProperty()
-  @Type(() => Boolean)
-  @IsBoolean()
+  // @Transform(({ value }) => value === 'true' || value === true)
+  // @IsBoolean()
   isPrivate: boolean;
 }
