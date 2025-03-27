@@ -18,28 +18,90 @@ export class RedisService implements ICacheService {
     await this.cacheManager.set(key, value, ttl);
   }
 
-  async setToken(
+  // When user log out
+  async setTokenIntoBlackList(
     jti: string,
     refreshToken: string,
     timeIssues: number,
     timeExpires: number,
   ): Promise<void> {
-    const data = {
-      refreshToken: refreshToken,
-      blacklisted_at: new Date().toLocaleString(),
-      expire_at: new Date(timeExpires * 1000).toLocaleString(),
-    };
     // TTL is in milisecond
     await this.cacheManager.set(
-      `refresh_token:${jti}`,
-      JSON.stringify(data),
+      `revoked_refresh_token:${jti}`,
+      refreshToken,
       (timeExpires - timeIssues) * 1000,
     );
   }
 
-  async checkToken(jti: string): Promise<boolean> {
-    const data = await this.cacheManager.get(`refresh_token:${jti}`);
+  // When user log in
+  async setTokenIntoActiveList(
+    userId: number,
+    jti: string,
+    refreshToken: string,
+    timeIssues: number,
+    timeExpires: number,
+  ): Promise<void> {
+    const tokenList =
+      (await this.cacheManager.get(`active_refresh_token:user:${userId}`)) ||
+      [];
 
-    return data !== null;
+    if (!Array.isArray(tokenList)) {
+      throw new Error('Invalid token list format');
+    }
+
+    tokenList.push({
+      jti: jti,
+      refreshToken: refreshToken,
+      ttl: (timeExpires - timeIssues) * 1000,
+    });
+
+    await this.cacheManager.set(
+      `active_refresh_token:user:${userId}`,
+      tokenList,
+    );
+  }
+
+  // When user log out in all devices
+  async setAllActiveTokensIntoBlackList(userId: number): Promise<void> {
+    const tokenList =
+      (await this.cacheManager.get(`active_refresh_token:user:${userId}`)) ||
+      [];
+
+    if (!Array.isArray(tokenList)) {
+      throw new Error('Invalid token list format');
+    }
+
+    for (const token of tokenList) {
+      await this.cacheManager.set(
+        `user:${userId}:active_refresh_token:${token.jti}`,
+        token.refreshToken,
+        token.ttl,
+      );
+    }
+  }
+
+  // When user log out, then get from active then put into black list
+  async delTokenFromActiveList(userId: number, jti: string): Promise<void> {
+    const tokenList =
+      (await this.cacheManager.get(`active_refresh_token:user:${userId}`)) ||
+      [];
+
+    if (!Array.isArray(tokenList)) {
+      throw new Error('Invalid token list format');
+    }
+
+    const updatedTokenList = tokenList.filter((token) => token.jti !== jti);
+
+    await this.cacheManager.set(
+      `active_refresh_token:user:${userId}`,
+      updatedTokenList,
+    );
+  }
+
+  // Check on get new access token
+  async checkTokenInBlackList(jti: string): Promise<boolean> {
+    const token = await this.cacheManager.get(`revoked_refresh_token:${jti}`);
+
+    return token !== null;
   }
 }

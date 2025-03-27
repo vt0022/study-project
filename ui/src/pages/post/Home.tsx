@@ -13,9 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
-import { useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import PreviewImage from "@/components/post/PreviewImage";
 import Image from "@/assets/images/test.jpg";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import postService from "@/services/postService";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -36,7 +38,28 @@ function Home() {
 
   const imageRef = useRef(null);
 
-  const [preview, setPreview] = useState<string>();
+  const [preview, setPreview] = useState("");
+  const [page, setPage] = useState(1);
+  const [size, setSize] = useState(2);
+
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ["postList"],
+    queryFn: ({ pageParam = 1 }) => postService.getPostsForUser(pageParam, 2),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      return lastPage.data.metadata.hasNextPage
+        ? lastPage.data.metadata.page + 1
+        : undefined;
+    },
+  });
 
   const handleUploadImage = (e) => {
     const file = e.target.files[0];
@@ -146,17 +169,24 @@ function Home() {
       </Box>
 
       <Box sx={{ backgroundColor: "white", padding: "20px" }}>
-        <Post
-          firstName="Thuan"
-          lastName="Nguyen"
-          avatar={Image}
-          content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi."
-          date={new Date("2025-03-18")}
-          image={Image}
-          totalLikes={10}
-          totalComments={5}
-          isLiked={true}
-        />
+        {data?.pages.map((page, index) => (
+          <Fragment key={index}>
+            {page.data.data.map((post) => (
+              <Post
+                key={post.id}
+                firstName={post.user.firstName}
+                lastName={post.user.lastName}
+                avatar={Image}
+                content={post.content}
+                date={post.createdAt}
+                image={post.thumbnailUrl}
+                totalLikes={post.totalLikes}
+                totalComments={post.totalComments}
+                isLiked={true}
+              />
+            ))}
+          </Fragment>
+        ))}
       </Box>
     </Stack>
   );

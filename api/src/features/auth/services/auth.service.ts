@@ -14,7 +14,6 @@ import { VerifyDto } from '../dto/verify.dto';
 import { AccessTokenPayload } from '../interfaces/accessTokenPayload.interface';
 import { RefreshTokenPayload } from '../interfaces/refreshTokenPayload.interface';
 import { CodeService } from './code.service';
-import { RefreshTokenService } from './refreshToken.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -28,7 +27,6 @@ export class AuthService {
     private codeService: CodeService,
     private emailService: EmailService,
     private configService: ConfigService,
-    private refreshTokenService: RefreshTokenService,
     private redisService: RedisService,
   ) {
     this.accessTokenExpAt = this.configService.get<string>(
@@ -63,6 +61,17 @@ export class AuthService {
 
     const accessToken = await this.generateToken(true, user);
     const refreshToken = await this.generateToken(false, user);
+
+    // Add to active list
+    const payload =
+      await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
+    this.redisService.setTokenIntoActiveList(
+      user.id,
+      payload.jti,
+      refreshToken,
+      payload.iat,
+      payload.exp,
+    );
 
     const userProfileDto = new UserProfileDto();
     userProfileDto.id = user.id;
@@ -127,6 +136,17 @@ export class AuthService {
     const accessToken = await this.generateToken(true, user);
     const refreshToken = await this.generateToken(false, user);
 
+    // Add to active list
+    const payload =
+      await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
+    this.redisService.setTokenIntoActiveList(
+      user.id,
+      payload.jti,
+      refreshToken,
+      payload.iat,
+      payload.exp,
+    );
+
     const userProfileDto = new UserProfileDto();
     userProfileDto.id = user.id;
     userProfileDto.email = user.email;
@@ -152,7 +172,7 @@ export class AuthService {
         await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
 
       // Check refresh token in black list
-      const isBanned = this.redisService.checkToken(payload.jti);
+      const isBanned = this.redisService.checkTokenInBlackList(payload.jti);
 
       if (isBanned) {
         throw new BadRequestException('Invalid refresh token');
@@ -181,36 +201,6 @@ export class AuthService {
     }
   }
 
-  // async logout(refreshTokenValue: string): Promise<void> {
-  //   if (refreshTokenValue) {
-  //     const payload =
-  //       this.jwtService.decode<RefreshTokenPayload>(refreshTokenValue);
-
-  //     // Find
-  //     const refreshToken = await this.refreshTokenService.findRefreshTokenById(
-  //       payload.jti,
-  //     );
-
-  //     if (!refreshToken) {
-  //       throw new BadRequestException('Invalid refresh token');
-  //     }
-
-  //     // Compare refresh token
-  //     // Incase change in db
-  //     const isMatch = await bcrypt.compare(
-  //       refreshTokenValue,
-  //       refreshToken.value,
-  //     );
-
-  //     // Token from cookie not match with token in db
-  //     if (!isMatch) {
-  //       throw new BadRequestException('Invalid refresh token');
-  //     }
-
-  //     await this.refreshTokenService.deleteRefreshTokenById(payload.jti);
-  //   }
-  // }
-
   async logout(refreshToken: string | null): Promise<void> {
     if (refreshToken) {
       // Verify
@@ -219,12 +209,15 @@ export class AuthService {
           await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
 
         // Put refresh token in black list
-        this.redisService.setToken(
+        this.redisService.setTokenIntoBlackList(
           payload.jti,
           refreshToken,
           payload.iat,
           payload.exp,
         );
+
+        // Remove refresh token in active list
+        this.redisService.delTokenFromActiveList(payload.sub, payload.jti);
       } catch {
         throw new BadRequestException('Invalid refresh token');
       }
@@ -244,10 +237,6 @@ export class AuthService {
       });
       return accessToken;
     } else {
-      // Refresh token
-      // const refreshToken =
-      //   await this.refreshTokenService.generateRefreshToken(user);
-      // return refreshToken;
       const jti = uuidv4();
       const payload: RefreshTokenPayload = {
         sub: user.id,
@@ -259,24 +248,4 @@ export class AuthService {
       return refreshToken;
     }
   }
-
-  // private async generateToken(isAccess: boolean, user: User): Promise<string> {
-  //   // Access token
-  //   if (isAccess) {
-  //     const payload: AccessTokenPayload = {
-  //       sub: user.id,
-  //       email: user.email,
-  //       role: user?.role.name,
-  //     };
-  //     const accessToken = await this.jwtService.signAsync(payload, {
-  //       expiresIn: this.accessTokenExpAt,
-  //     });
-  //     return accessToken;
-  //   } else {
-  //     // Refresh token
-  //     const refreshToken =
-  //       await this.refreshTokenService.generateRefreshToken(user);
-  //     return refreshToken;
-  //   }
-  // }
 }

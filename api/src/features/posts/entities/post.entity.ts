@@ -1,25 +1,11 @@
+import { BaseEntity } from 'src/common/entities/base.entities';
 import { User } from 'src/features/users/entities/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity()
-export class Post {
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Post extends BaseEntity {
   @Column({ type: 'text' })
   content: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
-
-  @Column({ name: 'updated_at', type: 'timestamp', nullable: true })
-  updatedAt: Date;
 
   @Column({ default: 0 })
   views: number;

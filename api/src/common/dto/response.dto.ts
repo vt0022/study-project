@@ -1,5 +1,5 @@
 export class ResponseDto<T> {
-  timestamp: string = new Date().toISOString();
+  timestamp: string = new Date().toLocaleString('vi-VN', { timeZone: 'UTC' });
   status: string;
   statusCode: number;
   message: string;

@@ -4,7 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { GlobalHttpExceptionFilter } from './common/filters/globalHttpException.filter';
+import { GlobalExceptionFilter } from './common/filters/globalException.filter';
 import { LoggerFactory } from './common/loggers/loggerFactory';
 
 async function bootstrap() {
@@ -25,9 +25,9 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
-  app.useGlobalFilters(new GlobalHttpExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   app.use(cookieParser());
 

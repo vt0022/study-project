@@ -9,7 +9,6 @@ import {
 import { Role } from './role.entity';
 import { Code } from 'src/features/auth/entities/code.entity';
 import { Post } from 'src/features/posts/entities/post.entity';
-import { RefreshToken } from 'src/features/auth/entities/refreshToken.entity';
 import { Follower } from './follower.entity';
 
 @Entity('user')
@@ -40,9 +39,6 @@ export class User {
 
   @OneToMany(() => Post, (post) => post.user)
   posts: Post[];
-
-  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
-  refreshTokens: RefreshToken[];
 
   // One user is being followed by other users
   @OneToMany(() => Follower, (follower) => follower.followedUser)

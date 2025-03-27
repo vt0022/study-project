@@ -16,7 +16,7 @@ export class ThumbnailConsumer extends WorkerHost {
 
   async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
-      case 'thumbnail': {
+      case 'generate_thumbnail': {
         try {
           // Download file
           const stream = await this.uploadFirebaseService.downloadFile(
@@ -40,6 +40,15 @@ export class ThumbnailConsumer extends WorkerHost {
           job.updateProgress(100);
         } catch {
           console.log('Error generating thumbnail for post');
+        }
+        return {};
+      }
+      case 'remove_thumbnail': {
+        try {
+          await this.uploadFirebaseService.deleteFile(job.data.imageUrl);
+          await this.uploadFirebaseService.deleteFile(job.data.imageUrl);
+        } catch {
+          console.log('Error removing old image and thumbnail for post');
         }
         return {};
       }

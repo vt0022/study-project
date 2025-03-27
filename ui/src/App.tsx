@@ -4,13 +4,18 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import "./App.css";
 import RootRoutes from "./routes/RootRoutes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 function App() {
-    return (
-        <div className="App">
-            <RootRoutes />
-        </div>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <div className="App">
+        <RootRoutes />
+      </div>
+    </QueryClientProvider>
+  );
 }
 
 export default App;

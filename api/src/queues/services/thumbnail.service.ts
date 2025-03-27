@@ -19,13 +19,13 @@ export class ThumbnailService {
 
     return {
       fieldname: 'thumbnail',
-      originalname: fileNameWithoutExt + '-thumbnail',
+      originalname: fileNameWithoutExt + '-thumbnail' + '.jpg',
       encoding: '7bit',
       mimetype: 'image/jpeg',
       buffer: buffer,
       size: buffer.length,
       destination: '',
-      filename: fileNameWithoutExt + '-thumbnail',
+      filename: fileNameWithoutExt + '-thumbnail' + '.jpg',
       path: '',
     } as Express.Multer.File;
   }

@@ -1,25 +1,30 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
+  Param,
+  ParseIntPipe,
   Post,
-  UploadedFile
+  Put,
+  Query,
+  UploadedFile,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/currentUser.decorator';
+import { Roles } from 'src/common/decorators/role.decorator';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { ResponseStatus } from 'src/common/enums/responseStatus.enum';
-import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
-import { PostAddDto } from '../dto/addPost.dto';
+import { SortOptions } from 'src/common/enums/sortOption.enum';
+import { PaginationOptions } from 'src/common/pagination/pagination.option';
+import { AddPostDto } from '../dto/addPost.dto';
+import { EditPostDto } from '../dto/editPost.dto';
 import { PostService } from '../services/post.service';
 
 @Controller('posts')
 export class PostController {
-  constructor(
-    private uploadFirebaseService: UploadFirebaseService,
-    private postService: PostService,
-  ) {}
+  constructor(private postService: PostService) {}
 
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -32,7 +37,9 @@ export class PostController {
         },
         content: {
           type: 'string',
-          example: '{"content": ""}',
+        },
+        isPrivate: {
+          type: 'boolean',
         },
       },
     },
@@ -41,22 +48,136 @@ export class PostController {
   @Post('/')
   async createPost(
     @CurrentUser('sub') userId: number,
-    @Body() postAddDto: PostAddDto,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    await this.postService.createPost(userId, postAddDto, file);
-  }
-
-  @ApiOperation({ summary: 'Get posts for news feed' })
-  @Get('/hi')
-  async getPostForNewsFeed(@CurrentUser('sub') userId: number) {
-    const postDtoList = await this.postService.getPostsForUser(userId);
+    @Body() addPostDto?: AddPostDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ): Promise<ResponseDto<any>> {
+    const detailPostDto = await this.postService.createPost(
+      userId,
+      addPostDto,
+      file,
+    );
 
     return new ResponseDto(
       ResponseStatus.Success,
       HttpStatus.OK,
-      'Get posts for user.',
+      'Create post successfully',
+      detailPostDto,
+    );
+  }
+
+  @ApiOperation({ summary: 'Get posts for news feed' })
+  @Get('/home')
+  async getPostForNewsFeed(
+    @CurrentUser('sub') userId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('size', ParseIntPipe) size: number = 10,
+  ): Promise<ResponseDto<any>> {
+    const paginationOptions: PaginationOptions = { page: page, size: size };
+    const postDtoList = await this.postService.getPostsForUser(
+      userId,
+      paginationOptions,
+    );
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Get posts for user successfully',
       postDtoList,
     );
+  }
+
+  @ApiOperation({ summary: 'Get detail post' })
+  @Get('/:id')
+  async getDetailPost(@Param('id') id: number): Promise<ResponseDto<any>> {
+    const detailPostDto = await this.postService.getDetailPost(id);
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Get detail post successfully',
+      detailPostDto,
+    );
+  }
+
+  @ApiQuery({
+    name: 'order',
+    type: String,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'sort',
+    type: String,
+    required: false,
+  })
+  @ApiOperation({ summary: 'Get all posts' })
+  // @Roles('admin')
+  @Get('')
+  async getAllPost(
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('size', ParseIntPipe) size: number = 10,
+    @Query('order') order: string = 'createdAt',
+    @Query('sort') sort: string = 'desc',
+  ): Promise<ResponseDto<any>> {
+    const paginationOptions: PaginationOptions = {
+      page: page,
+      size: size,
+      order: order,
+      sort: sort.toUpperCase() as SortOptions,
+    };
+    const postDtoList = await this.postService.getAllPosts(paginationOptions);
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Get all post successfully',
+      postDtoList,
+    );
+  }
+
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        content: {
+          type: 'string',
+        },
+        isPrivate: {
+          type: 'boolean',
+        },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Edit post' })
+  @Put('/:id')
+  async editPost(
+    @CurrentUser('sub') userId: number,
+    @Param('id') id: number,
+    @Body() editPostDto?: EditPostDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    const detailPostDto = await this.postService.editPost(
+      id,
+      editPostDto,
+      file,
+    );
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Edit post successfully',
+      detailPostDto,
+    );
+  }
+
+  @ApiOperation({ summary: 'Delete post' })
+  @Roles('admin')
+  @Delete('/:id')
+  async deletePost(@Param('id') id: number) {
+    await this.postService.deletePost(id);
   }
 }

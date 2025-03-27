@@ -1,8 +1,10 @@
 import { axiosClient } from "@/config/axios";
 
 const postService = {
-  test: async () => {
-    return axiosClient.get("/posts/test").then((response) => response.data);
+  getPostsForUser: async (page: number, size: number) => {
+    return axiosClient
+      .get("/posts/home", { params: { page, size } })
+      .then((response) => response.data);
   },
 };
 

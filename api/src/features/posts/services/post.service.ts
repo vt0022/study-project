@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UserService } from 'src/features/users/services/user.service';
-import { PostAddDto } from '../dto/addPost.dto';
+import { AddPostDto } from '../dto/addPost.dto';
 import { Post } from '../entities/post.entity';
 import { PostRepository } from '../repositories/post.repository';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -8,6 +8,9 @@ import { Queue } from 'bullmq';
 import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
 import { PostDto } from '../dto/post.dto';
 import { plainToInstance } from 'class-transformer';
+import { PaginationOptions } from 'src/common/pagination/pagination.option';
+import { DetailPostDto } from '../dto/detailPost.dto';
+import { EditPostDto } from '../dto/editPost.dto';
 
 @Injectable()
 export class PostService {
@@ -21,9 +24,9 @@ export class PostService {
 
   async createPost(
     userId: number,
-    postAddDto: PostAddDto,
+    addPostDto: AddPostDto,
     file: Express.Multer.File,
-  ): Promise<any> {
+  ): Promise<DetailPostDto> {
     // Find and handle user
     const user = await this.userService.findUserById(userId);
     if (!user) {
@@ -32,7 +35,8 @@ export class PostService {
 
     // New post
     let newPost = new Post();
-    newPost.content = postAddDto.content;
+    newPost.content = addPostDto.content;
+    newPost.isPrivate = addPostDto.isPrivate;
     newPost.user = user;
 
     // Upload and handle file
@@ -47,7 +51,90 @@ export class PostService {
     }
 
     try {
+      // Save and convert
       newPost = await this.postRepository.savePost(newPost);
+
+      const post = await this.postRepository.findDetailPost(newPost.id);
+
+      const postDto = plainToInstance(DetailPostDto, post, {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      });
+
+      // Add to queue
+      if (file) {
+        await this.thumbnailQueue.add('thumbnail', {
+          fileUrl: fileUrl,
+          postId: newPost.id,
+        });
+      }
+
+      return postDto;
+    } catch {
+      // Rollback uploading image
+      // Rollback saving post
+      try {
+        await this.uploadFirebaseService.deleteFile(fileUrl);
+        console.log('Rollack file');
+      } catch {
+        console.log('Failed to rollack file');
+      }
+      throw new BadRequestException('Failed to create post');
+    }
+  }
+
+  async editPost(
+    postId: number,
+    editPostDto: EditPostDto,
+    file: Express.Multer.File,
+  ): Promise<DetailPostDto> {
+    // Find and handle post
+    const post = await this.postRepository.findPostById(postId);
+    if (!post) {
+      throw new BadRequestException('Post not found');
+    }
+
+    post.content = editPostDto.content;
+    post.isPrivate = editPostDto.isPrivate;
+    post.updatedAt = new Date();
+
+    // Upload and handle file
+    let fileUrl = '';
+    if (file) {
+      try {
+        fileUrl = await this.uploadFirebaseService.uploadFile(file);
+        post.imageUrl = fileUrl;
+        post.thumbnailUrl = null;
+      } catch {
+        throw new BadRequestException('Error uploading file');
+      }
+    }
+
+    try {
+      const editedPost = await this.postRepository.savePost(post);
+
+      const postDto = plainToInstance(DetailPostDto, editedPost, {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      });
+
+      // Generate thumbnail
+      if (file) {
+        await this.thumbnailQueue.add('generate_thumbnail', {
+          fileUrl: fileUrl,
+          postId: postId,
+        });
+      }
+
+      // Remove old image and thumbnail
+      if (post.thumbnailUrl && post.imageUrl) {
+        await this.thumbnailQueue.add('remove_thumbnail', {
+          imageUrl: post.imageUrl,
+          thumbnailUrl: post.thumbnailUrl,
+        });
+      }
+
+      return postDto;
     } catch {
       // Rollback uploading image
       try {
@@ -58,12 +145,6 @@ export class PostService {
       }
       throw new BadRequestException('Failed to create post');
     }
-
-    // Add to queue
-    await this.thumbnailQueue.add('thumbnail', {
-      fileUrl: fileUrl,
-      postId: newPost.id,
-    });
   }
 
   async updateThumbnail(postId: number, thumbnailUrl: string): Promise<void> {
@@ -86,10 +167,16 @@ export class PostService {
     }
   }
 
-  async getPostsForUser(userId: number): Promise<PostDto[]> {
-    const postList = await this.postRepository.findPostsForUser(userId);
+  async getPostsForUser(
+    userId: number,
+    paginationOptions: PaginationOptions,
+  ): Promise<any> {
+    const postData = await this.postRepository.findPostsForUser(
+      userId,
+      paginationOptions,
+    );
 
-    const postDtoList = postList.map((post) => {
+    const postDtoList = postData.data.map((post: Post) => {
       const postDto = plainToInstance(PostDto, post, {
         excludeExtraneousValues: true,
         enableImplicitConversion: true,
@@ -99,8 +186,52 @@ export class PostService {
       return postDto;
     });
 
-    console.log(postDtoList);
+    return {
+      data: postDtoList,
+      metadata: postData.metadata,
+    };
+  }
 
-    return postDtoList;
+  async getAllPosts(paginationOptions: PaginationOptions): Promise<any> {
+    const postData = await this.postRepository.findAllPosts(paginationOptions);
+
+    const postDtoList = postData.data.map((post: Post) => {
+      const postDto = plainToInstance(PostDto, post, {
+        excludeExtraneousValues: true,
+        enableImplicitConversion: true,
+      });
+      postDto.totalLikes = 0;
+      postDto.totalComments = 0;
+      return postDto;
+    });
+
+    return {
+      data: postDtoList,
+      metadata: postData.metadata,
+    };
+  }
+
+  async getDetailPost(postId: number): Promise<DetailPostDto> {
+    const post = await this.postRepository.findDetailPost(postId);
+
+    const postDto = plainToInstance(DetailPostDto, post, {
+      excludeExtraneousValues: true,
+      enableImplicitConversion: true,
+    });
+
+    postDto.totalLikes = 0;
+    postDto.totalComments = 0;
+
+    return postDto;
+  }
+
+  async deletePost(postId: number): Promise<void> {
+    const post = await this.postRepository.findOne({ where: { id: postId } });
+
+    if (!post) {
+      throw new BadRequestException('Post not found');
+    }
+
+    await this.postRepository.deletePostById(postId);
   }
 }
