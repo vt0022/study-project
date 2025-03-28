@@ -1,11 +1,15 @@
 import Post from "@/components/post/Post";
 import UploadSection from "@/components/post/UploadSection";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
+import { RootState } from "@/redux/store";
 import postService from "@/services/postService";
 import {
   Avatar,
   Box,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Grid2,
   Stack,
   Typography,
@@ -13,9 +17,17 @@ import {
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Fragment, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
+import { useSelector } from "react-redux";
 
-function Home() {
+function Wall() {
   usePrivateAxios();
+
+  const { _persist, ...user } = useSelector(
+    (state: RootState) => state.user
+  ) || {
+    firstName: "",
+    lastName: "",
+  };
 
   const {
     data,
@@ -25,8 +37,8 @@ function Home() {
     isFetching,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["homePostList"],
-    queryFn: ({ pageParam = 1 }) => postService.getPostsForUser(pageParam, 2),
+    queryKey: ["myPostList"],
+    queryFn: ({ pageParam = 1 }) => postService.getMyPosts(pageParam, 2),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       return lastPage?.data?.metadata?.hasNextPage
@@ -35,6 +47,10 @@ function Home() {
     },
     refetchOnWindowFocus: false,
   });
+
+  const isEmpty =
+    !isFetching &&
+    (!data || data.pages.every((page) => page.data.length === 0));
 
   const { ref, inView } = useInView({
     threshold: 1,
@@ -67,8 +83,11 @@ function Home() {
         }}
       >
         <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-          Home
+          Wall
         </Typography>
+        {/* <Avatar alt="My avatar" sx={{ width: "100px", height: "100px" }}>
+          Me
+        </Avatar> */}
       </Box>
 
       <Box sx={{ backgroundColor: "white", p: "20px" }}>
@@ -80,7 +99,7 @@ function Home() {
           </Grid2>
 
           <Grid2 size="grow">
-            <UploadSection from="home" />
+            <UploadSection from="wall" />
           </Grid2>
         </Grid2>
       </Box>
@@ -97,8 +116,8 @@ function Home() {
                 <Post
                   key={post.id}
                   id={post.id}
-                  firstName={post.user.firstName}
-                  lastName={post.user.lastName}
+                  firstName={user?.firstName || ""}
+                  lastName={user?.lastName || ""}
                   avatar=""
                   content={post.content}
                   date={post.createdAt}
@@ -108,6 +127,7 @@ function Home() {
                   isLiked={post.isLiked}
                   totalLikes={post.totalLikes}
                   totalComments={post.totalComments}
+                  isMine={true}
                 />
               ))}
             </Fragment>
@@ -124,10 +144,14 @@ function Home() {
           {error && <Typography>Something went wrong</Typography>}
 
           {!hasNextPage && <Typography>All posts are here</Typography>}
+
+          {isEmpty && (
+            <Typography>We haven't found anything for you</Typography>
+          )}
         </Box>
       )}
     </Stack>
   );
 }
 
-export default Home;
+export default Wall;

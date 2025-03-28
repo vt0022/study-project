@@ -86,6 +86,42 @@ export class PostController {
     );
   }
 
+  @ApiOperation({ summary: "Get current user's post" })
+  @Get('/me')
+  async getMyPosts(
+    @CurrentUser('sub') userId: number,
+    @Query('page', ParseIntPipe) page: number = 1,
+    @Query('size', ParseIntPipe) size: number = 10,
+  ): Promise<ResponseDto<any>> {
+    const paginationOptions: PaginationOptions = { page: page, size: size };
+    const postDtoList = await this.postService.getPostsOfUser(
+      userId,
+      paginationOptions,
+    );
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Get posts of current user successfully',
+      postDtoList,
+    );
+  }
+
+  @ApiOperation({ summary: 'Like or unlike post' })
+  @Put('/:id/like')
+  async likePost(
+    @CurrentUser('sub') userId: number,
+    @Param('id') postId: number,
+  ) {
+    const like = await this.postService.likePost(postId, userId);
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      `${like ? 'Like' : 'Unlike'} post successfully`,
+    );
+  }
+
   @ApiOperation({ summary: 'Get detail post' })
   @Get('/:id')
   async getDetailPost(@Param('id') id: number): Promise<ResponseDto<any>> {
@@ -155,7 +191,6 @@ export class PostController {
   @ApiOperation({ summary: 'Edit post' })
   @Put('/:id')
   async editPost(
-    @CurrentUser('sub') userId: number,
     @Param('id') id: number,
     @Body() editPostDto?: EditPostDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -179,5 +214,11 @@ export class PostController {
   @Delete('/:id')
   async deletePost(@Param('id') id: number) {
     await this.postService.deletePost(id);
+
+    return new ResponseDto(
+      ResponseStatus.Success,
+      HttpStatus.OK,
+      'Delete post successfully',
+    );
   }
 }

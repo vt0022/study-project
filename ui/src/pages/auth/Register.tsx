@@ -1,5 +1,8 @@
+import Logo from "@/assets/images/register.png";
+import authService from "@/services/authService";
+import { toastOptions } from "@/utils/toastOptions";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -11,17 +14,14 @@ import {
   InputLabel,
   Link,
   OutlinedInput,
-  Snackbar,
   Stack,
   TextField,
-  Typography,
+  Typography
 } from "@mui/material";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import Logo from "@/assets/images/register.png";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-import authService from "@/services/authService";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Register() {
   const {
@@ -33,8 +33,6 @@ function Register() {
 
   const navigate = useNavigate();
 
-  const [openNoti, setOpenNoti] = useState(false);
-  const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const onClickShowPassword = () => setShowPassword((show) => !show);
@@ -47,10 +45,6 @@ function Register() {
     event.preventDefault();
   };
 
-  const onCloseSnackbar = () => {
-    setOpenNoti(false);
-  };
-
   const onSubmit = async (data) => {
     const response = await authService.register(
       data.email,
@@ -60,8 +54,7 @@ function Register() {
       data.lastName
     );
     if (response.statusCode !== 200) {
-      setOpenNoti(true);
-      setMessage(response.message);
+      toast.error(response.message, toastOptions);
     } else {
       navigate("/verify", { state: { email: data.email } });
     }
@@ -76,6 +69,7 @@ function Register() {
           borderRadius: 5,
           boxShadow: 3,
           padding: 5,
+          backgroundColor: "white",
         }}
       >
         <Avatar
@@ -134,7 +128,7 @@ function Register() {
               rules={{
                 required: "Please enter your email",
                 pattern: {
-                  value: /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                  value: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/,
                   message: "Invalid email format",
                 },
               }}
@@ -268,22 +262,6 @@ function Register() {
           </Link>
         </Box>
       </Box>
-
-      <Snackbar
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        open={openNoti}
-        autoHideDuration={2000}
-        onClose={onCloseSnackbar}
-      >
-        <Alert
-          onClose={onCloseSnackbar}
-          severity="error"
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 }

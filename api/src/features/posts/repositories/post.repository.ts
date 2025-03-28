@@ -53,8 +53,11 @@ export class PostRepository extends Repository<Post> {
     const postQuery = this.createQueryBuilder('post')
       .innerJoinAndSelect('post.user', 'author') // Get author of post -> each post with author
       .innerJoin('author.followers', 'follower') // Get followings of author ->
+      .leftJoin('post.likes', 'like') // Join likes table
+      .addSelect('COUNT(like.id)', 'likeCount') // Count likes
       .where('follower.followingUser.id = :id', { id: userId }) // Compare with following Id
       .andWhere('post.isPrivate = false')
+      .groupBy('post.id, author.id')
       .orderBy('post.createdAt', SortOptions.Desc)
       .skip((paginationOptions.page - 1) * paginationOptions.size)
       .take(paginationOptions.size);
@@ -71,7 +74,12 @@ export class PostRepository extends Repository<Post> {
       hasNextPage: paginationOptions.page < totalPages,
     };
 
-    const postList = await postQuery.getMany();
+    const postRawList = await postQuery.getRawAndEntities();
+
+    const postList = postRawList.entities.map((post, index) => ({
+      ...post,
+      likeCount: parseInt(postRawList.raw[index].likeCount, 10),
+    }));
 
     return {
       data: postList,
@@ -79,10 +87,43 @@ export class PostRepository extends Repository<Post> {
     };
   }
 
+  async findPostsOfUser(
+    userId: number,
+    paginationOptions: PaginationOptions,
+  ): Promise<any> {
+    const [postList, count] = await this.findAndCount({
+      relations: {
+        likes: true,
+      },
+      where: {
+        user: { id: userId },
+      },
+      order: { createdAt: 'DESC' },
+      skip: (paginationOptions.page - 1) * paginationOptions.size,
+      take: paginationOptions.size,
+    });
+
+    const totalPages = Math.ceil(count / paginationOptions.size);
+
+    const paginationMetaData: PaginationMetaData = {
+      page: paginationOptions.page,
+      size: paginationOptions.size,
+      totalPages: totalPages,
+      totalItems: count,
+      hasPreviousPage: paginationOptions.page > 1,
+      hasNextPage: paginationOptions.page < totalPages,
+    };
+
+    return {
+      data: postList,
+      metadata: paginationMetaData,
+    };
+  }
   async findAllPosts(paginationOptions: PaginationOptions): Promise<any> {
     const [postList, count] = await this.findAndCount({
       relations: {
         user: true,
+        likes: true,
       },
       order: { [paginationOptions.order]: paginationOptions.sort },
       skip: (paginationOptions.page - 1) * paginationOptions.size,

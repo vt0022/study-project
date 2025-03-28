@@ -8,6 +8,7 @@ import { PostRepository } from '../repositories/post.repository';
 import { UserModule } from 'src/features/users/modules/user.module';
 import { UploadMiddleware } from 'src/common/middlewares/upload.middleware';
 import { BullModule } from '@nestjs/bullmq';
+import { LikeRepository } from '../repositories/like.repository';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { BullModule } from '@nestjs/bullmq';
     UserModule,
   ],
   controllers: [PostController],
-  providers: [PostService, PostRepository],
+  providers: [PostService, PostRepository, LikeRepository],
   exports: [PostService],
 })
 export class PostModule implements NestModule {

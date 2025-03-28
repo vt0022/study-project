@@ -1,16 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { UserService } from 'src/features/users/services/user.service';
-import { AddPostDto } from '../dto/addPost.dto';
-import { Post } from '../entities/post.entity';
-import { PostRepository } from '../repositories/post.repository';
 import { InjectQueue } from '@nestjs/bullmq';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
-import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
-import { PostDto } from '../dto/post.dto';
 import { plainToInstance } from 'class-transformer';
 import { PaginationOptions } from 'src/common/pagination/pagination.option';
+import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
+import { UserService } from 'src/features/users/services/user.service';
+import { AddPostDto } from '../dto/addPost.dto';
 import { DetailPostDto } from '../dto/detailPost.dto';
 import { EditPostDto } from '../dto/editPost.dto';
+import { PostDto } from '../dto/post.dto';
+import { Post } from '../entities/post.entity';
+import { LikeRepository } from '../repositories/like.repository';
+import { PostRepository } from '../repositories/post.repository';
+import { Like } from '../entities/like.entity';
 
 @Injectable()
 export class PostService {
@@ -20,6 +22,7 @@ export class PostService {
     private postRepository: PostRepository,
     private userService: UserService,
     private uploadFirebaseService: UploadFirebaseService,
+    private likeRepository: LikeRepository,
   ) {}
 
   async createPost(
@@ -100,6 +103,7 @@ export class PostService {
 
     // Upload and handle file
     let fileUrl = '';
+    // User send image
     if (file) {
       try {
         fileUrl = await this.uploadFirebaseService.uploadFile(file);
@@ -107,6 +111,14 @@ export class PostService {
         post.thumbnailUrl = null;
       } catch {
         throw new BadRequestException('Error uploading file');
+      }
+    } else {
+      // User not send image but there is already image before
+      if (post.imageUrl) {
+        await this.thumbnailQueue.add('remove_thumbnail', {
+          imageUrl: post.imageUrl,
+          thumbnailUrl: post.thumbnailUrl,
+        });
       }
     }
 
@@ -176,15 +188,50 @@ export class PostService {
       paginationOptions,
     );
 
-    const postDtoList = postData.data.map((post: Post) => {
-      const postDto = plainToInstance(PostDto, post, {
-        excludeExtraneousValues: true,
-        enableImplicitConversion: true,
-      });
-      postDto.totalLikes = 0;
-      postDto.totalComments = 0;
-      return postDto;
-    });
+    const postDtoList = await Promise.all(
+      postData.data.map(async (post: any) => {
+        const postDto = plainToInstance(PostDto, post, {
+          excludeExtraneousValues: true,
+          enableImplicitConversion: true,
+        });
+
+        const like = await this.likeRepository.findLike(userId, post.id);
+        postDto.isLiked = like !== null;
+        postDto.totalLikes = post.likeCount;
+        postDto.totalComments = 0;
+        return postDto;
+      }),
+    );
+
+    return {
+      data: postDtoList,
+      metadata: postData.metadata,
+    };
+  }
+
+  async getPostsOfUser(
+    userId: number,
+    paginationOptions: PaginationOptions,
+  ): Promise<any> {
+    const postData = await this.postRepository.findPostsOfUser(
+      userId,
+      paginationOptions,
+    );
+
+    const postDtoList = await Promise.all(
+      postData.data.map(async (post: Post) => {
+        const postDto = plainToInstance(PostDto, post, {
+          excludeExtraneousValues: true,
+          enableImplicitConversion: true,
+        });
+
+        const like = await this.likeRepository.findLike(userId, post.id);
+        postDto.isLiked = like !== null;
+        postDto.totalLikes = post.likes.length;
+        postDto.totalComments = 0;
+        return postDto;
+      }),
+    );
 
     return {
       data: postDtoList,
@@ -200,7 +247,7 @@ export class PostService {
         excludeExtraneousValues: true,
         enableImplicitConversion: true,
       });
-      postDto.totalLikes = 0;
+      postDto.totalLikes = post.likes.length;
       postDto.totalComments = 0;
       return postDto;
     });
@@ -226,12 +273,30 @@ export class PostService {
   }
 
   async deletePost(postId: number): Promise<void> {
-    const post = await this.postRepository.findOne({ where: { id: postId } });
+    const post = await this.postRepository.findPostById(postId);
 
     if (!post) {
       throw new BadRequestException('Post not found');
     }
 
     await this.postRepository.deletePostById(postId);
+  }
+
+  async likePost(postId: number, userId: number): Promise<boolean> {
+    const post = await this.postRepository.findPostById(postId);
+    const user = await this.userService.findUserById(userId);
+
+    let like = await this.likeRepository.findLike(userId, postId);
+
+    if (!like) {
+      like = new Like();
+      like.user = user;
+      like.post = post;
+      await this.likeRepository.saveLike(like);
+      return true;
+    }
+
+    await this.likeRepository.deleteLike(like.id);
+    return false;
   }
 }

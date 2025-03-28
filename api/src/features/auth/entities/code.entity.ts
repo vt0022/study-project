@@ -22,6 +22,6 @@ export class Code {
   isUsed: boolean;
 
   @OneToOne(() => User, (user) => user.code)
-  @JoinColumn()
+  @JoinColumn({ name: 'user_id' })
   user: User;
 }

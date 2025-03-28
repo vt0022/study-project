@@ -172,17 +172,19 @@ export class AuthService {
         await this.jwtService.verifyAsync<RefreshTokenPayload>(refreshToken);
 
       // Check refresh token in black list
-      const isBanned = this.redisService.checkTokenInBlackList(payload.jti);
+      const isBanned = await this.redisService.checkTokenInBlackList(
+        payload.jti,
+      );
 
       if (isBanned) {
-        throw new BadRequestException('Invalid refresh token');
+        throw new BadRequestException('Invalid refresh token1');
       }
 
       // Get user
       const user = await this.userService.findUserById(payload.sub);
 
       if (!user) {
-        throw new BadRequestException('Invalid refresh token');
+        throw new BadRequestException('Invalid refresh token2');
       }
 
       // Create new access token
@@ -195,9 +197,11 @@ export class AuthService {
       const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
         expiresIn: this.configService.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
       });
+
       return accessToken;
-    } catch {
-      throw new BadRequestException('Invalid refresh token');
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('Invalid refresh token3');
     }
   }
 

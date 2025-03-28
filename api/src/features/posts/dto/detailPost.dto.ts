@@ -21,6 +21,9 @@ export class DetailPostDto {
   isPrivate: boolean;
 
   @Expose()
+  isLiked: boolean;
+
+  @Expose()
   totalLikes: number = 0;
 
   @Expose()

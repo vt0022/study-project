@@ -12,7 +12,7 @@ export class Follower {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'followed_at' })
   followedAt: Date;
 
   @ManyToOne(() => User, (user) => user.followers) // Users that follow a user

@@ -1,9 +1,11 @@
 import { axiosClient } from "@/config/axios";
 import { removeUser } from "@/redux/slices/userSlice";
 import AuthService from "@/services/authService";
+import { toastOptions } from "@/utils/toastOptions";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export function usePrivateAxios() {
     const navigate = useNavigate();
@@ -32,15 +34,18 @@ export function usePrivateAxios() {
                             // Retry
                             return axiosClient(originalRequest);
                         } else {
+                            // toast.error("Please log in again", toastOptions);
                             dispatch(removeUser());
                             navigate("/login");
                         }
                     } catch (error) {
+                        // toast.error("Please log in again", toastOptions);
                         dispatch(removeUser());
                         navigate("/login");
                         return Promise.reject(error);
                     }
                 } else if (response.data.statusCode === 403) {
+                    // toast.error("This action requires privilege", toastOptions);
                     // Forbidden
                     dispatch(removeUser());
                     navigate("/login");
