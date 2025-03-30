@@ -1,37 +1,35 @@
 {
-  "name": "study-project",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "private": true,
-  "workspaces": [
-    "admin",
-    "api",
-    "ui"
-  ],
-  "scripts": {
-    "ui": "yarn workspace @study-project/ui",
-    "admin-ui": "yarn workspace @study-project/admin",
-    "api": "yarn workspace @study-project/api",
-    "dev": "concurrently \"yarn workspace @study-project/ui dev\" \"yarn workspace @study-project/admin-ui dev\" \"yarn workspace @study-project/api start:dev\"",
-    "build": "yarn workspaces run build"
-  },
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@fontsource/roboto": "^5.2.5",
-    "@mui/icons-material": "^6.4.7",
-    "@mui/material": "^6.4.7",
-    "@reduxjs/toolkit": "^2.6.1",
-    "@tanstack/react-query": "^5.69.0",
-    "concurrently": "^9.1.2",
-    "moment": "^2.30.1",
-    "path": "^0.12.7",
-    "react-hook-form": "^7.54.2",
-    "react-intersection-observer": "^9.16.0",
-    "react-redux": "^9.2.0",
-    "react-router-dom": "6",
-    "react-toastify": "^11.0.5",
-    "redux-persist": "^6.0.0"
-  }
+    "name": "study-project",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "ui": "yarn workspace @study-project/ui",
+        "admin-ui": "yarn workspace @study-project/admin",
+        "api": "yarn workspace @study-project/api",
+        "dev": "concurrently \"yarn workspace @study-project/ui dev\" \"yarn workspace @study-project/admin-ui dev\" \"yarn workspace @study-project/api start:dev\"",
+        "build": "yarn workspaces run build"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@fontsource/roboto": "^5.2.5",
+        "@mui/icons-material": "^6.4.7",
+        "@mui/material": "^6.4.7",
+        "@reduxjs/toolkit": "^2.6.1",
+        "@tanstack/react-query": "^5.69.0",
+        "concurrently": "^9.1.2",
+        "moment": "^2.30.1",
+        "path": "^0.12.7",
+        "react-hook-form": "^7.54.2",
+        "react-intersection-observer": "^9.16.0",
+        "react-redux": "^9.2.0",
+        "react-router-dom": "6",
+        "react-toastify": "^11.0.5",
+        "redux-persist": "^6.0.0"
+    }
 }
