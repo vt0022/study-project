@@ -21,6 +21,14 @@ const postService = {
       .then((response) => response.data);
   },
 
+  updatePost: async (postId: number, data: FormData) => {
+    return await axiosClient
+      .put(`/posts/${postId}`, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      .then((response) => response.data);
+  },
+
   likePost: async (postId: number) => {
     return await axiosClient
       .put(`/posts/${postId}/like`)

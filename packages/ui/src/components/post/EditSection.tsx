@@ -44,6 +44,7 @@ interface EditSectionProps {
   isPrivate: boolean;
   imageUrl: string;
   content: string;
+  onClose: () => void;
 }
 
 function EditSection({
@@ -52,6 +53,7 @@ function EditSection({
   isPrivate,
   imageUrl,
   content,
+  onClose,
 }: EditSectionProps) {
   usePrivateAxios();
 
@@ -64,20 +66,33 @@ function EditSection({
   const [preview, setPreview] = useState(imageUrl || "");
 
   const mutation = useMutation({
-    mutationFn: (formData) => postService.createPost(formData),
+    mutationFn: ({ postId, formData }) =>
+      postService.updatePost(postId, formData),
     onSuccess: (response) => {
       if (response.statusCode === 200) {
-        toast.success("Your post is ready", toastOptions);
+        // toast.success("Your post is ready", toastOptions);
         reset();
         setPreview("");
-        if (from === "wall") {
-          queryClient.invalidateQueries({
-            queryKey: ["myPostList"],
-            refetchType: "active",
-          });
-        }
+        onClose();
+        queryClient.setQueryData(["myPostList"], (oldData) => {
+          if (!oldData) {
+            return oldData;
+          }
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              data: {
+                ...page.data,
+                data: page?.data?.data.map((post) =>
+                  post.id === response.data.id ? response.data : post
+                ),
+              },
+            })),
+          };
+        });
       } else {
-        toast.error("Error creating your post", toastOptions);
+        toast.error("Error editting your post", toastOptions);
       }
     },
     onError: (error) => {
@@ -90,8 +105,9 @@ function EditSection({
     const formData = new FormData();
     formData.append("file", data.image);
     formData.append("content", data.content);
-    formData.append("privacy", JSON.stringify(data.isPrivate));
-    mutation.mutate(formData);
+    formData.append("isPrivate", JSON.stringify(data.privacy));
+    console.log(data);
+    mutation.mutate({ postId: id, formData });
   };
 
   const handleUploadImage = (e) => {

@@ -42,7 +42,7 @@ interface UploadSectionProps {
   from: string;
 }
 
-function UploadSection({ from = "" }: UploadSectionProps) {
+function AddSection({ from = "" }: UploadSectionProps) {
   usePrivateAxios();
 
   const queryClient = useQueryClient();
@@ -57,7 +57,7 @@ function UploadSection({ from = "" }: UploadSectionProps) {
     mutationFn: (formData) => postService.createPost(formData),
     onSuccess: (response) => {
       if (response.statusCode === 200) {
-        toast.success("Your post is ready", toastOptions);
+        // toast.success("Your post is ready", toastOptions);
         reset();
         setPreview("");
         if (from === "wall") {
@@ -80,7 +80,7 @@ function UploadSection({ from = "" }: UploadSectionProps) {
     const formData = new FormData();
     formData.append("file", data.image);
     formData.append("content", data.content);
-    formData.append("privacy", JSON.stringify(data.isPrivate));
+    formData.append("isPrivate", JSON.stringify(data.privacy));
     mutation.mutate(formData);
   };
 
@@ -209,4 +209,4 @@ function UploadSection({ from = "" }: UploadSectionProps) {
   );
 }
 
-export default UploadSection;
+export default AddSection;

@@ -27,7 +27,7 @@ import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import UploadSection from "./UploadSection";
+import UploadSection from "./AddSection";
 import EditSection from "./EditSection";
 
 type PostProps = {
@@ -72,7 +72,7 @@ function Post({
   isMine,
 }: PostProps) {
   const [openPreview, setOpenPreview] = useState(false);
-  const [openEdit, setOpenEdit] = useState(true);
+  const [openEdit, setOpenEdit] = useState(false);
   const [likeProps, setLikeProps] = useState({
     isLiked: isLiked,
     totalLikes: totalLikes,
@@ -107,10 +107,6 @@ function Post({
 
   const handleCloseMenu = () => {
     setAnchorEl(null);
-  };
-
-  const handleCloseEdit = () => {
-    setOpenEdit(false);
   };
 
   const onLike = () => {
@@ -192,7 +188,13 @@ function Post({
                       },
                     }}
                   >
-                    <MenuItem onClick={handleCloseMenu} disableRipple>
+                    <MenuItem
+                      onClick={() => {
+                        setOpenEdit(true);
+                        handleCloseMenu();
+                      }}
+                      disableRipple
+                    >
                       <Edit />
                       Edit
                     </MenuItem>
@@ -264,10 +266,10 @@ function Post({
       </Modal>
 
       <Dialog
-        open={true}
+        open={openEdit}
         maxWidth="sm"
         fullWidth={true}
-        onClose={handleCloseEdit}
+        onClose={() => setOpenEdit(false)}
       >
         <DialogTitle sx={{ marginBottom: "10px", fontSize: "30px" }}>
           Edit post
@@ -279,6 +281,7 @@ function Post({
             content={content}
             isPrivate={isPrivate}
             imageUrl={imageUrl}
+            onClose={() => setOpenEdit(false)}
           />
         </DialogContent>
       </Dialog>

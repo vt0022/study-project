@@ -1,5 +1,5 @@
 import Post from "@/components/post/Post";
-import UploadSection from "@/components/post/UploadSection";
+import UploadSection from "@/components/post/AddSection";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
 import { RootState } from "@/redux/store";
 import postService from "@/services/postService";

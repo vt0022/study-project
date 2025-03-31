@@ -8,7 +8,7 @@ export class AddPostDto {
   content: string;
 
   @ApiProperty()
-  // @Transform(({ value }) => value === 'true' || value === true)
-  // @IsBoolean()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
   isPrivate: boolean;
 }
