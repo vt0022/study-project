@@ -1,6 +1,8 @@
-import Post from "@/components/post/Post";
 import UploadSection from "@/components/post/AddSection";
+import Post from "@/components/post/Post";
+import QueryConstants from "@/constants/queryConstants";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
+import { useWindowResize } from "@/hooks/useWindowResize";
 import postService from "@/services/postService";
 import {
   Avatar,
@@ -11,20 +13,20 @@ import {
   Typography,
 } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Fragment, useEffect, ComponentType } from "react";
-import { useInView } from "react-intersection-observer";
+import { ComponentType, useCallback, useRef } from "react";
+import AutoSizer from "react-virtualized-auto-sizer";
 import {
   VariableSizeList as _VariableSizeList,
   VariableSizeListProps,
 } from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer";
 import InfiniteLoader from "react-window-infinite-loader";
-import QueryConstants from "@/constants/queryConstants";
 
 const List = _VariableSizeList as ComponentType<VariableSizeListProps>;
 
 function Home() {
   usePrivateAxios();
+
+  const listRef = useRef(null);
 
   const {
     data,
@@ -35,7 +37,7 @@ function Home() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: [QueryConstants.HOME_POST_LIST],
-    queryFn: ({ pageParam = 1 }) => postService.getPostsForUser(pageParam, 2),
+    queryFn: ({ pageParam = 1 }) => postService.getPostsForUser(pageParam, 3),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       return lastPage?.data?.metadata?.hasNextPage
@@ -45,26 +47,28 @@ function Home() {
     refetchOnWindowFocus: false,
   });
 
-  // const { ref, inView } = useInView({
-  //   threshold: 1,
-  //   triggerOnce: false,
-  // });
-
-  // useEffect(() => {
-  //   if (inView) {
-  //     fetchNextPage();
-  //   }
-  // }, [inView]);
-
   const postList = data?.pages?.flatMap((page) => page?.data?.data) || [];
 
   const totalPosts = data?.pages[0]?.data?.metadata?.totalItems || 0;
 
-  const isItemLoaded = (index: number) => !!postList[index];
+  const isItemLoaded = (index: number) =>
+    !hasNextPage || index < postList.length;
+  // index < postList.length && postList[index] !== null;
 
   const loadMoreItems = (startIndex: number, stopIndex: number) => {
     fetchNextPage();
   };
+
+  const sizeMap = useRef({});
+
+  const setSize = useCallback((index: number, size: number) => {
+    sizeMap.current = { ...sizeMap.current, [index]: size };
+    listRef?.current?.resetAfterIndex(index);
+  }, []);
+
+  const getSize = (index: number) => sizeMap.current[index] + 10|| 50;
+
+  const [windowWidth] = useWindowResize();
 
   return (
     <Stack
@@ -109,52 +113,57 @@ function Home() {
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ height: "100%", flex: "1" }}>
-          <AutoSizer>
-            {({ height, width }) => (
-              <InfiniteLoader
-                isItemLoaded={isItemLoaded}
-                itemCount={totalPosts}
-                loadMoreItems={loadMoreItems}
-                // threshold={15} // No of items from end to trigger load more
-              >
-                {({ onItemsRendered, ref }) => (
-                  <List
-                    height={height}
-                    itemCount={postList.length}
-                    itemSize={() => 550}
-                    width={width}
-                    ref={ref}
-                    onItemsRendered={onItemsRendered}
-                  >
-                    {({ index, style }) => {
-                      const post = postList[index];
+        <Box sx={{ height: "100%" }}>
+          <Box sx={{ height: "100%" }}>
+            <AutoSizer>
+              {({ height, width }) => (
+                <InfiniteLoader
+                  isItemLoaded={isItemLoaded}
+                  itemCount={totalPosts}
+                  loadMoreItems={loadMoreItems}
+                  threshold={1} // No of items from end to trigger load more
+                >
+                  {({ onItemsRendered, ref }) => (
+                    <List
+                      height={height}
+                      itemCount={postList.length}
+                      itemSize={getSize}
+                      width={width}
+                      ref={listRef}
+                      onItemsRendered={onItemsRendered}
+                    >
+                      {({ index, style }) => {
+                        const post = postList[index];
 
-                      return (
-                        <div style={style}>
-                          <Post
-                            key={post.id}
-                            id={post.id}
-                            firstName={post.user.firstName}
-                            lastName={post.user.lastName}
-                            avatar=""
-                            content={post.content}
-                            date={post.createdAt}
-                            imageUrl={post.imageUrl}
-                            thumbnailUrl={post.thumbnailUrl}
-                            isPrivate={post.isPrivate}
-                            isLiked={post.isLiked}
-                            totalLikes={post.totalLikes}
-                            totalComments={post.totalComments}
-                          />
-                        </div>
-                      );
-                    }}
-                  </List>
-                )}
-              </InfiniteLoader>
-            )}
-          </AutoSizer>
+                        return (
+                          <div style={style}>
+                            <Post
+                              key={post.id}
+                              id={post.id}
+                              firstName={post.user.firstName}
+                              lastName={post.user.lastName}
+                              avatar=""
+                              content={post.content}
+                              date={post.createdAt}
+                              imageUrl={post.imageUrl}
+                              thumbnailUrl={post.thumbnailUrl}
+                              isPrivate={post.isPrivate}
+                              isLiked={post.isLiked}
+                              totalLikes={post.totalLikes}
+                              totalComments={post.totalComments}
+                              index={index}
+                              setSize={setSize}
+                              windowWidth={windowWidth}
+                            />
+                          </div>
+                        );
+                      }}
+                    </List>
+                  )}
+                </InfiniteLoader>
+              )}
+            </AutoSizer>
+          </Box>
 
           {isFetchingNextPage && (
             <Box sx={{ margin: "auto" }}>

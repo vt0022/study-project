@@ -1,12 +1,5 @@
 import postService from "@/services/postService";
-import {
-  ChatBubbleOutline,
-  Edit,
-  Favorite,
-  FavoriteBorderOutlined,
-  MoreVert,
-  Share,
-} from "@mui/icons-material";
+import { Edit, MoreVert } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -24,9 +17,10 @@ import {
 } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import EditSection from "./EditSection";
+import InteractiveBar from "./InteractiveBar";
 
 type PostProps = {
   id: number;
@@ -42,6 +36,9 @@ type PostProps = {
   totalComments: number;
   isLiked: boolean;
   isMine?: boolean;
+  index?: number;
+  setSize?: (index: number, height: number) => void;
+  windowWidth?: number;
 };
 
 const style = {
@@ -68,17 +65,34 @@ function Post({
   totalComments,
   isLiked,
   isMine,
+  index,
+  setSize,
+  windowWidth,
 }: PostProps) {
-  const [openPreview, setOpenPreview] = useState(false);
-  const [openEdit, setOpenEdit] = useState(false);
   const [likeProps, setLikeProps] = useState({
     isLiked: isLiked,
     totalLikes: totalLikes,
   });
 
+  const [openPreview, setOpenPreview] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
+  const postRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setSize?.(index, postRef.current.getBoundingClientRect().height);
+  }, [setSize, index, windowWidth]);
+
   const openMenu = Boolean(anchorEl);
+
+  const handleClickMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
 
   const mutation = useMutation({
     mutationFn: (postId) => postService.likePost(postId),
@@ -99,14 +113,6 @@ function Post({
     },
   });
 
-  const handleClickMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
-
   const onLike = () => {
     setLikeProps((prevLikeProps) => ({
       ...prevLikeProps,
@@ -119,170 +125,148 @@ function Post({
   };
 
   return (
-    <Box
-      sx={{ backgroundColor: "white", marginBottom: "10px", padding: "20px" }}
-    >
-      <Grid2 container spacing={3}>
-        <Grid2>
-          <Avatar
-            alt="Other avatar"
-            sx={{ width: "50px", height: "50px", margin: "0 auto" }}
-            src={avatar}
-          >
-            {firstName.charAt(0).toUpperCase()}
-          </Avatar>
-        </Grid2>
-
-        <Grid2 size="grow">
-          <Stack spacing={1}>
-            <Stack
-              direction="row"
-              sx={{ justifyContent: "space-between", alignItems: "flex-end" }}
+    <Box sx={{ paddingBottom: "10px", backgroundColor: "#f0f0f0" }}>
+      <Box sx={{ backgroundColor: "white", padding: "20px" }} ref={postRef}>
+        <Grid2 container spacing={3}>
+          <Grid2>
+            <Avatar
+              alt="Other avatar"
+              sx={{ width: "50px", height: "50px", margin: "0 auto" }}
+              src={avatar}
             >
+              {firstName.charAt(0).toUpperCase()}
+            </Avatar>
+          </Grid2>
+
+          <Grid2 size="grow">
+            <Stack spacing={1}>
               <Stack
                 direction="row"
-                sx={{ alignItems: "flex-end" }}
-                spacing={1}
+                sx={{ justifyContent: "space-between", alignItems: "flex-end" }}
               >
-                <Typography sx={{ fontWeight: "500", textAlign: "justify" }}>
-                  {lastName} {firstName}
-                </Typography>
+                <Stack
+                  direction="row"
+                  sx={{ alignItems: "flex-end" }}
+                  spacing={1}
+                >
+                  <Typography sx={{ fontWeight: "500", textAlign: "justify" }}>
+                    {lastName} {firstName}
+                  </Typography>
 
-                <Typography>•</Typography>
+                  <Typography>•</Typography>
 
-                <Typography sx={{ textAlign: "justify", color: "gray" }}>
-                  {moment(date).fromNow()}
-                </Typography>
-              </Stack>
+                  <Typography sx={{ textAlign: "justify", color: "gray" }}>
+                    {moment(date).fromNow()}
+                  </Typography>
+                </Stack>
 
-              {isMine && (
-                <div>
-                  <IconButton
-                    aria-label="more"
-                    id="menu-button"
-                    onClick={handleClickMenu}
-                  >
-                    <MoreVert />
-                  </IconButton>
-                  <Menu
-                    id="action-menu"
-                    anchorEl={anchorEl}
-                    open={openMenu}
-                    onClose={handleCloseMenu}
-                    slotProps={{
-                      paper: {
-                        sx: {
-                          "& .MuiMenuItem-root": {
-                            "& .MuiSvgIcon-root": {
-                              fontSize: 18,
-                              color: "gray",
-                              marginRight: "10px",
-                            },
-                            "&:active": {
-                              backgroundColor: "gray",
+                {isMine && (
+                  <div>
+                    <IconButton
+                      aria-label="more"
+                      id="menu-button"
+                      onClick={handleClickMenu}
+                    >
+                      <MoreVert />
+                    </IconButton>
+                    <Menu
+                      id="action-menu"
+                      anchorEl={anchorEl}
+                      open={openMenu}
+                      onClose={handleCloseMenu}
+                      slotProps={{
+                        paper: {
+                          sx: {
+                            "& .MuiMenuItem-root": {
+                              "& .MuiSvgIcon-root": {
+                                fontSize: 18,
+                                color: "gray",
+                                marginRight: "10px",
+                              },
+                              "&:active": {
+                                backgroundColor: "gray",
+                              },
                             },
                           },
                         },
-                      },
-                    }}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        setOpenEdit(true);
-                        handleCloseMenu();
                       }}
-                      disableRipple
                     >
-                      <Edit />
-                      Edit
-                    </MenuItem>
-                  </Menu>
-                </div>
-              )}
-            </Stack>
+                      <MenuItem
+                        onClick={() => {
+                          setOpenEdit(true);
+                          handleCloseMenu();
+                        }}
+                        disableRipple
+                      >
+                        <Edit />
+                        Edit
+                      </MenuItem>
+                    </Menu>
+                  </div>
+                )}
+              </Stack>
 
-            <Typography
-              variant="body1"
-              sx={{
-                textAlign: "justify",
-                maxWidth: "580px",
-              }}
-            >
-              {content}
-            </Typography>
-
-            <img
-              src={thumbnailUrl ? thumbnailUrl : imageUrl}
-              style={{
-                borderRadius: "20px",
-                maxWidth: "100%",
-                maxHeight: "400px",
-                objectFit: "cover",
-                cursor: "pointer",
-              }}
-              onClick={() => setOpenPreview(true)}
-            />
-          </Stack>
-
-          <Grid2 container display="flex" spacing={2} marginTop={1}>
-            <Stack direction="row" alignItems="center">
-              <IconButton
-                color={likeProps.isLiked ? "error" : "default"}
-                onClick={onLike}
+              <Typography
+                variant="body1"
                 sx={{
-                  transition: "color 0.3s ease-in-out, transform 0.2s",
-                  "&:active": { transform: "scale(0.9)" },
+                  textAlign: "justify",
+                  maxWidth: "580px",
                 }}
               >
-                {likeProps.isLiked ? <Favorite /> : <FavoriteBorderOutlined />}
-              </IconButton>
+                {content}
+              </Typography>
 
-              <Typography fontSize="20px">{likeProps.totalLikes}</Typography>
+              <img
+                src={thumbnailUrl ? thumbnailUrl : imageUrl}
+                style={{
+                  borderRadius: "20px",
+                  maxWidth: "100%",
+                  maxHeight: "400px",
+                  objectFit: "cover",
+                  cursor: "pointer",
+                }}
+                onClick={() => setOpenPreview(true)}
+              />
             </Stack>
 
-            <Stack direction="row" alignItems="center">
-              <IconButton>
-                <ChatBubbleOutline />
-              </IconButton>
-
-              <Typography fontSize="20px">{totalComments}</Typography>
-            </Stack>
-
-            <IconButton>
-              <Share />
-            </IconButton>
+            <InteractiveBar
+              isLiked={likeProps.isLiked}
+              totalLikes={likeProps.totalLikes}
+              totalComments={totalComments}
+              onLike={onLike}
+            />
           </Grid2>
         </Grid2>
-      </Grid2>
 
-      <Modal open={openPreview} onClose={() => setOpenPreview(false)}>
-        <Fade in={openPreview}>
-          <div style={style}>
-            <img src={imageUrl} style={{ maxHeight: "90vh" }} />
-          </div>
-        </Fade>
-      </Modal>
+        <Modal open={openPreview} onClose={() => setOpenPreview(false)}>
+          <Fade in={openPreview}>
+            <div style={style}>
+              <img src={imageUrl} style={{ maxHeight: "90vh" }} />
+            </div>
+          </Fade>
+        </Modal>
 
-      <Dialog
-        open={openEdit}
-        maxWidth="sm"
-        fullWidth={true}
-        onClose={() => setOpenEdit(false)}
-      >
-        <DialogTitle sx={{ marginBottom: "10px", fontSize: "30px" }}>
-          Edit post
-        </DialogTitle>
-        <DialogContent>
-          <EditSection
-            from="wall"
-            id={id}
-            content={content}
-            isPrivate={isPrivate}
-            imageUrl={imageUrl}
-            onClose={() => setOpenEdit(false)}
-          />
-        </DialogContent>
-      </Dialog>
+        <Dialog
+          open={openEdit}
+          maxWidth="sm"
+          fullWidth={true}
+          onClose={() => setOpenEdit(false)}
+        >
+          <DialogTitle sx={{ marginBottom: "10px", fontSize: "30px" }}>
+            Edit post
+          </DialogTitle>
+          <DialogContent>
+            <EditSection
+              from="wall"
+              id={id}
+              content={content}
+              isPrivate={isPrivate}
+              imageUrl={imageUrl}
+              onClose={() => setOpenEdit(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      </Box>
     </Box>
   );
 }

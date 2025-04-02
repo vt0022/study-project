@@ -25,7 +25,7 @@ export class LikeRepository extends Repository<Like> {
     return await this.save(like);
   }
 
-  async deleteLike(likeId: number): Promise<void> {
-    await this.delete(likeId);
+  async deleteLike(id: number): Promise<void> {
+    await this.delete(id);
   }
 }

@@ -19,10 +19,15 @@ import { PaginationOptions } from 'src/common/pagination/pagination.option';
 import { AddPostDto } from '../dto/addPost.dto';
 import { EditPostDto } from '../dto/editPost.dto';
 import { PostService } from '../services/post.service';
+import { AddCommentDto } from '../dto/addComment.dto';
+import { CommentService } from '../services/comment.service';
 
 @Controller('posts')
 export class PostController {
-  constructor(private postService: PostService) {}
+  constructor(
+    private postService: PostService,
+    private commentService: CommentService,
+  ) {}
 
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -102,6 +107,22 @@ export class PostController {
     const like = await this.postService.likePost(postId, userId);
 
     return ResponseDto.success(`${like ? 'Like' : 'Unlike'} post successfully`);
+  }
+
+  @ApiOperation({ summary: 'Comment on a post' })
+  @Post('/:id/comment')
+  async createComment(
+    @CurrentUser('sub') userId: number,
+    @Param('id') postId: number,
+    @Body() addCommentDto: AddCommentDto,
+  ) {
+    const commentDto = await this.commentService.createComment(
+      userId,
+      postId,
+      addCommentDto,
+    );
+
+    return ResponseDto.success('Create comment successfully', commentDto);
   }
 
   @ApiOperation({ summary: 'Get detail post' })

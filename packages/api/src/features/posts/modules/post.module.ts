@@ -9,10 +9,14 @@ import { UserModule } from 'src/features/users/modules/user.module';
 import { UploadMiddleware } from 'src/common/middlewares/upload.middleware';
 import { BullModule } from '@nestjs/bullmq';
 import { LikeRepository } from '../repositories/like.repository';
+import { Like } from '../entities/like.entity';
+import { Comment } from '../entities/comment.entity';
+import { CommentService } from '../services/comment.service';
+import { CommentRepository } from '../repositories/comment.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post]),
+    TypeOrmModule.forFeature([Post, Like, Comment]),
     BullModule.registerQueue({
       name: 'thumbnail',
     }),
@@ -20,7 +24,13 @@ import { LikeRepository } from '../repositories/like.repository';
     UserModule,
   ],
   controllers: [PostController],
-  providers: [PostService, PostRepository, LikeRepository],
+  providers: [
+    PostService,
+    CommentService,
+    CommentRepository,
+    PostRepository,
+    LikeRepository,
+  ],
   exports: [PostService],
 })
 export class PostModule implements NestModule {

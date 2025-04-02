@@ -190,20 +190,7 @@ export class PostService {
       paginationOptions,
     );
 
-    const postDtoList = await Promise.all(
-      postData.data.map(async (post: any) => {
-        const postDto = plainToInstance(PostDto, post, {
-          excludeExtraneousValues: true,
-          enableImplicitConversion: true,
-        });
-
-        const like = await this.likeRepository.findLike(userId, post.id);
-        postDto.isLiked = like !== null;
-        postDto.totalLikes = post.likeCount;
-        postDto.totalComments = 0;
-        return postDto;
-      }),
-    );
+    const postDtoList = await this.convertToPostDto(postData, userId);
 
     return {
       data: postDtoList,
@@ -220,20 +207,7 @@ export class PostService {
       paginationOptions,
     );
 
-    const postDtoList = await Promise.all(
-      postData.data.map(async (post: Post) => {
-        const postDto = plainToInstance(PostDto, post, {
-          excludeExtraneousValues: true,
-          enableImplicitConversion: true,
-        });
-
-        const like = await this.likeRepository.findLike(userId, post.id);
-        postDto.isLiked = like !== null;
-        postDto.totalLikes = post.likes.length;
-        postDto.totalComments = 0;
-        return postDto;
-      }),
-    );
+    const postDtoList = await this.convertToPostDto(postData, userId);
 
     return {
       data: postDtoList,
@@ -300,5 +274,28 @@ export class PostService {
 
     await this.likeRepository.deleteLike(like.id);
     return false;
+  }
+
+  async findPostById(id: number): Promise<Post | null> {
+    return await this.findPostById(id);
+  }
+
+  async convertToPostDto(postData: any, userId: number): Promise<PostDto[]> {
+    const postDtoList = await Promise.all(
+      postData.data.map(async (post: Post) => {
+        const postDto = plainToInstance(PostDto, post, {
+          excludeExtraneousValues: true,
+          enableImplicitConversion: true,
+        });
+
+        const like = await this.likeRepository.findLike(userId, post.id);
+        postDto.isLiked = like !== null;
+        postDto.totalLikes = post.likes.length;
+        postDto.totalComments = 0;
+        return postDto;
+      }),
+    );
+
+    return postDtoList;
   }
 }
