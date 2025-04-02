@@ -1,9 +1,8 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { plainToInstance } from 'class-transformer';
 import { PaginationOptions } from 'src/common/pagination/pagination.option';
-import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
 import { UserService } from 'src/features/users/services/user.service';
 import { AddPostDto } from '../dto/addPost.dto';
 import { DetailPostDto } from '../dto/detailPost.dto';
@@ -13,15 +12,18 @@ import { Post } from '../entities/post.entity';
 import { LikeRepository } from '../repositories/like.repository';
 import { PostRepository } from '../repositories/post.repository';
 import { Like } from '../entities/like.entity';
+import { ServiceConstants } from 'src/common/constants/service.constant';
+import { IUploadService } from 'src/features/upload/upload.service';
 
 @Injectable()
 export class PostService {
   constructor(
     @InjectQueue('thumbnail')
     private thumbnailQueue: Queue,
+    @Inject(ServiceConstants.UPLOAD_FIREBASE_SERVICE)
+    private uploadService: IUploadService,
     private postRepository: PostRepository,
     private userService: UserService,
-    private uploadFirebaseService: UploadFirebaseService,
     private likeRepository: LikeRepository,
   ) {}
 
@@ -46,7 +48,7 @@ export class PostService {
     let fileUrl = '';
     if (file) {
       try {
-        fileUrl = await this.uploadFirebaseService.uploadFile(file);
+        fileUrl = await this.uploadService.uploadFile(file);
         newPost.imageUrl = fileUrl;
       } catch {
         throw new BadRequestException('Error uploading file');
@@ -77,7 +79,7 @@ export class PostService {
       // Rollback uploading image
       // Rollback saving post
       try {
-        await this.uploadFirebaseService.deleteFile(fileUrl);
+        await this.uploadService.deleteFile(fileUrl);
         console.log('Rollack file');
       } catch {
         console.log('Failed to rollack file');
@@ -106,7 +108,7 @@ export class PostService {
     // User send image
     if (file) {
       try {
-        fileUrl = await this.uploadFirebaseService.uploadFile(file);
+        fileUrl = await this.uploadService.uploadFile(file);
         post.imageUrl = fileUrl;
         post.thumbnailUrl = null;
       } catch {
@@ -150,7 +152,7 @@ export class PostService {
     } catch {
       // Rollback uploading image
       try {
-        await this.uploadFirebaseService.deleteFile(fileUrl);
+        await this.uploadService.deleteFile(fileUrl);
         console.log('Rollack file');
       } catch {
         console.log('Failed to rollack file');
@@ -171,7 +173,7 @@ export class PostService {
       this.postRepository.savePost(post);
     } catch {
       try {
-        await this.uploadFirebaseService.deleteFile(thumbnailUrl);
+        await this.uploadService.deleteFile(thumbnailUrl);
         console.log('Rollack thumbnail');
       } catch {
         console.log('Failed to rollack thumbnail');

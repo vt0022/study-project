@@ -1,13 +1,16 @@
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
+import { Inject } from '@nestjs/common';
 import { Job } from 'bullmq';
+import { ServiceConstants } from 'src/common/constants/service.constant';
 import { PostService } from 'src/features/posts/services/post.service';
-import { UploadFirebaseService } from 'src/features/upload/uploadFirebase.service';
+import { IUploadService } from 'src/features/upload/upload.service';
 import { ThumbnailService } from '../services/thumbnail.service';
 
 @Processor('thumbnail')
 export class ThumbnailConsumer extends WorkerHost {
   constructor(
-    private uploadFirebaseService: UploadFirebaseService,
+    @Inject(ServiceConstants.UPLOAD_FIREBASE_SERVICE)
+    private uploadService: IUploadService,
     private postService: PostService,
     private thumbnailService: ThumbnailService,
   ) {
@@ -19,7 +22,7 @@ export class ThumbnailConsumer extends WorkerHost {
       case 'generate_thumbnail': {
         try {
           // Download file
-          const stream = await this.uploadFirebaseService.downloadFile(
+          const stream = await this.uploadService.downloadFile(
             job.data.fileUrl,
           );
           job.updateProgress(20);
@@ -32,8 +35,7 @@ export class ThumbnailConsumer extends WorkerHost {
           job.updateProgress(50);
 
           // Upload thumbnail
-          const thumbnailUrl =
-            await this.uploadFirebaseService.uploadFile(thumbnail);
+          const thumbnailUrl = await this.uploadService.uploadFile(thumbnail);
           job.updateProgress(80);
 
           await this.postService.updateThumbnail(job.data.postId, thumbnailUrl);
@@ -45,8 +47,8 @@ export class ThumbnailConsumer extends WorkerHost {
       }
       case 'remove_thumbnail': {
         try {
-          await this.uploadFirebaseService.deleteFile(job.data.imageUrl);
-          await this.uploadFirebaseService.deleteFile(job.data.imageUrl);
+          await this.uploadService.deleteFile(job.data.imageUrl);
+          await this.uploadService.deleteFile(job.data.imageUrl);
         } catch {
           console.log('Error removing old image and thumbnail for post');
         }

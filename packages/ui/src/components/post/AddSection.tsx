@@ -1,7 +1,7 @@
 import PreviewImage from "@/components/post/PreviewImage";
+import QueryConstants from "@/constants/queryConstants";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
 import postService from "@/services/postService";
-import { toastOptions } from "@/utils/toastOptions";
 import {
   ImageOutlined,
   LockPersonOutlined,
@@ -57,21 +57,21 @@ function AddSection({ from = "" }: UploadSectionProps) {
     mutationFn: (formData) => postService.createPost(formData),
     onSuccess: (response) => {
       if (response.statusCode === 200) {
-        // toast.success("Your post is ready", toastOptions);
+        // toast.success("Your post is ready");
         reset();
         setPreview("");
         if (from === "wall") {
           queryClient.invalidateQueries({
-            queryKey: ["myPostList"],
+            queryKey: [QueryConstants.MY_POST_LIST],
             refetchType: "active",
           });
         }
       } else {
-        toast.error("Error creating your post", toastOptions);
+        toast.error("Error creating your post");
       }
     },
     onError: (error) => {
-      toast.error("Error creating your post", toastOptions);
+      toast.error("Error creating your post");
       console.log("Upload failed: ", error);
     },
   });

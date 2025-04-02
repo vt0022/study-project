@@ -1,5 +1,6 @@
-import Post from "@/components/post/Post";
 import UploadSection from "@/components/post/AddSection";
+import Post from "@/components/post/Post";
+import QueryConstants from "@/constants/queryConstants";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
 import { RootState } from "@/redux/store";
 import postService from "@/services/postService";
@@ -7,12 +8,9 @@ import {
   Avatar,
   Box,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   Grid2,
   Stack,
-  Typography,
+  Typography
 } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Fragment, useEffect } from "react";
@@ -37,7 +35,7 @@ function Wall() {
     isFetching,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["myPostList"],
+    queryKey: [QueryConstants.MY_POST_LIST],
     queryFn: ({ pageParam = 1 }) => postService.getMyPosts(pageParam, 2),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

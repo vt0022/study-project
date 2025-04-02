@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ResponseDto } from '../dto/response.dto';
-import { ResponseStatus } from '../enums/responseStatus.enum';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -27,7 +26,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       return response
         .status(HttpStatus.OK)
-        .json(new ResponseDto(ResponseStatus.Error, status, message));
+        .json(ResponseDto.failure(status, message));
     }
 
     message =
@@ -37,12 +36,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     return response
       .status(HttpStatus.OK)
-      .json(
-        new ResponseDto(
-          ResponseStatus.Error,
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          message,
-        ),
-      );
+      .json(ResponseDto.failure(HttpStatus.INTERNAL_SERVER_ERROR, message));
   }
 }

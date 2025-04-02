@@ -3,7 +3,7 @@ import { Code } from '../entities/code.entity';
 import { User } from 'src/features/users/entities/user.entity';
 import { UserService } from 'src/features/users/services/user.service';
 import { CodeRepository } from '../repositories/code.repository';
-import { Constants } from 'src/common/constants/constant';
+import { AppConstants } from 'src/common/constants/app.constant';
 
 @Injectable()
 export class CodeService {
@@ -23,7 +23,7 @@ export class CodeService {
 
       code.value = codeValue;
 
-      code.expiredAt = new Date(Date.now() + Constants.CODE_EXPIRES_IN);
+      code.expiredAt = new Date(Date.now() + AppConstants.CODE_EXPIRES_IN);
       code.isUsed = false;
       await this.codeRepository.saveCode(code);
 
@@ -74,7 +74,7 @@ export class CodeService {
 
   async createCode(user: User): Promise<Code> {
     const code = new Code();
-    code.expiredAt = new Date(Date.now() + Constants.CODE_EXPIRES_IN);
+    code.expiredAt = new Date(Date.now() + AppConstants.CODE_EXPIRES_IN);
     code.user = user;
 
     let codeValue: string;

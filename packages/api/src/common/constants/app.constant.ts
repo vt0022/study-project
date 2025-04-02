@@ -1,4 +1,4 @@
-export class Constants {
+export class AppConstants {
   static readonly REFRESH_TOKEN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000; // 30 days
   static readonly REFRESH_TOKEN_COOKIE_PATH = '/api/auth';
   static readonly CODE_EXPIRES_IN = 1000 * 60 * 15; // 15 minutes

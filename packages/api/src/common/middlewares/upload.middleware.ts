@@ -4,15 +4,15 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import multer, { FileFilterCallback } from 'multer';
-import { Constants } from '../constants/constant';
 import path from 'path';
+import { AppConstants } from '../constants/app.constant';
 
 @Injectable()
 export class UploadMiddleware implements NestMiddleware {
   private upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: Constants.MAX_FILE_SIZE,
+      fileSize: AppConstants.MAX_FILE_SIZE,
     },
     fileFilter: (request, file, cb) => {
       this.checkFileType(file, cb);

@@ -1,5 +1,4 @@
 import postService from "@/services/postService";
-import { toastOptions } from "@/utils/toastOptions";
 import {
   ChatBubbleOutline,
   Edit,
@@ -27,7 +26,6 @@ import { useMutation } from "@tanstack/react-query";
 import moment from "moment";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import UploadSection from "./AddSection";
 import EditSection from "./EditSection";
 
 type PostProps = {
@@ -96,7 +94,7 @@ function Post({
       }
     },
     onError: (error) => {
-      toast.error("Error like this post", toastOptions);
+      toast.error("Error like this post");
       console.log("Like failed: ", error);
     },
   });

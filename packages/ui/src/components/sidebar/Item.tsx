@@ -1,28 +1,25 @@
 import { ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import { ComponentType } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 
 interface ItemProps {
   icon: ComponentType;
   name: string;
-  path: string;
+  isSelected: boolean
+  onClick: () => void
 }
-function Item({ icon: Icon, name, path }: ItemProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
-
+function Item({ icon: Icon, name, isSelected, onClick }: ItemProps) {
   return (
     <ListItemButton
-      onClick={() => navigate(path)}
-      selected={path === location.pathname}
+    onClick={onClick}
+      selected={isSelected}
       sx={{
-        color: path === location.pathname ? "black" : "gray",
+        color: isSelected ? "black" : "gray",
         borderRadius: "10px",
       }}
     >
       <ListItemIcon
         sx={{
-          color: path === location.pathname ? "black" : "gray",
+          color: isSelected ? "black" : "gray",
           borderRadius: "10px",
         }}
       >

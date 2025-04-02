@@ -1,25 +1,25 @@
 import Logo from "@/assets/images/login.png";
+import AppConstants from "@/constants/appConstants";
 import { storeUser } from "@/redux/slices/userSlice";
 import authService from "@/services/authService";
-import { toastOptions } from "@/utils/toastOptions";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
-    Avatar,
-    Box,
-    Button,
-    Checkbox,
-    Container,
-    FormControl,
-    FormControlLabel,
-    FormHelperText,
-    IconButton,
-    InputAdornment,
-    InputLabel,
-    Link,
-    OutlinedInput,
-    Stack,
-    TextField,
-    Typography
+  Avatar,
+  Box,
+  Button,
+  Checkbox,
+  Container,
+  FormControl,
+  FormControlLabel,
+  FormHelperText,
+  IconButton,
+  InputAdornment,
+  InputLabel,
+  Link,
+  OutlinedInput,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -49,9 +49,9 @@ function Login() {
   const onSubmit = async (data) => {
     const response = await authService.login(data.email, data.password);
     if (response.statusCode !== 200) {
-      toast.error(response.message, toastOptions);
+      toast.error(response.message);
     } else {
-      toast.success(response.message, toastOptions);
+      toast.success(response.message);
       // Get user data from response
       const user: User = response.data.user;
       // Store and persist user data
@@ -80,7 +80,7 @@ function Login() {
             borderRadius: 5,
             boxShadow: 3,
             padding: 5,
-            backgroundColor: "white"
+            backgroundColor: "white",
           }}
         >
           <Avatar
@@ -102,7 +102,7 @@ function Login() {
                 rules={{
                   required: "Please enter your email",
                   pattern: {
-                    value: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                    value: AppConstants.EMAIL_REGEX,
                     message: "Invalid email format",
                   },
                 }}

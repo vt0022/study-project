@@ -4,13 +4,14 @@ import authService from "@/services/authService";
 import { BubbleChart, ExitToApp } from "@mui/icons-material";
 import { Box, IconButton, List, Typography } from "@mui/material";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Item from "../sidebar/Item";
 import { LeftbarItemList } from "../sidebar/ItemList";
 
 function Leftbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   usePrivateAxios();
 
   const onLogout = async () => {
@@ -30,14 +31,6 @@ function Leftbar() {
           height: "100%",
         }}
       >
-        {/* <img
-          src={Logo}
-          alt="Logo"
-          width="100"
-          height="100"
-          style={{ margin: "0 auto" }}
-        /> */}
-
         <Box sx={{ display: "flex", alignItems: "center", marginY: "50px" }}>
           <BubbleChart
             color="success"
@@ -56,7 +49,8 @@ function Leftbar() {
                 key={key}
                 name={item.name}
                 icon={item.icon}
-                path={item.path}
+                isSelected={item.path === location.pathname}
+                onClick={() => navigate(item.path)}
               />
             );
           })}

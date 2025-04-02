@@ -1,15 +1,13 @@
-import { Body, Controller, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { AppConstants } from 'src/common/constants/app.constant';
 import { Public } from 'src/common/decorators/public.decorator';
 import { ResponseDto } from 'src/common/dto/response.dto';
 import { LoginStatus } from 'src/common/enums/loginStatus.enum';
-import { ResponseStatus } from 'src/common/enums/responseStatus.enum';
-import { UserProfileDto } from 'src/features/users/dto/userProfile.dto';
 import { LoginDto } from '../dto/login.dto';
 import { RegisterDto } from '../dto/register.dto';
 import { VerifyDto } from '../dto/verify.dto';
 import { AuthService } from '../services/auth.service';
-import { Constants } from 'src/common/constants/constant';
 
 @Controller('auth')
 export class AuthController {
@@ -25,11 +23,7 @@ export class AuthController {
 
     // Not verified then must verify
     if (result.status === LoginStatus.NotVerified) {
-      return new ResponseDto(
-        ResponseStatus.Success,
-        HttpStatus.OK,
-        'Account registered before. Please verify.',
-      );
+      return ResponseDto.success('Account registered before. Please verify.');
     }
 
     // Set up cookie
@@ -40,21 +34,16 @@ export class AuthController {
     });
 
     response.cookie('refresh_token', result.refreshToken, {
-      maxAge: Constants.REFRESH_TOKEN_COOKIE_MAX_AGE,
+      maxAge: AppConstants.REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-      path: Constants.REFRESH_TOKEN_COOKIE_PATH,
+      path: AppConstants.REFRESH_TOKEN_COOKIE_PATH,
     });
 
-    return new ResponseDto<{ user: UserProfileDto }>(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Login successfully',
-      {
-        user: result.user,
-      },
-    );
+    return ResponseDto.success('Login successfully', {
+      user: result.user,
+    });
   }
 
   @Public()
@@ -62,11 +51,7 @@ export class AuthController {
   async register(@Body() registerDto: RegisterDto) {
     await this.authService.register(registerDto);
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Register successfully. Please verify.',
-    );
+    return ResponseDto.success('Register successfully. Please verify.');
   }
 
   @Public()
@@ -92,14 +77,10 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'none',
       secure: true,
-      path: Constants.REFRESH_TOKEN_COOKIE_PATH,
+      path: AppConstants.REFRESH_TOKEN_COOKIE_PATH,
     });
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Logout successfully.',
-    );
+    return ResponseDto.success('Logout successfully.');
   }
 
   @Public()
@@ -118,21 +99,16 @@ export class AuthController {
     });
 
     response.cookie('refresh_token', result.refreshToken, {
-      maxAge: Constants.REFRESH_TOKEN_COOKIE_MAX_AGE,
+      maxAge: AppConstants.REFRESH_TOKEN_COOKIE_MAX_AGE,
       httpOnly: true,
       sameSite: 'none',
       secure: true,
       path: '/api/auth/refresh',
     });
 
-    return new ResponseDto<{ user: UserProfileDto }>(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Verify successfully',
-      {
-        user: result.user,
-      },
-    );
+    return ResponseDto.success('Verify successfully', {
+      user: result.user,
+    });
   }
 
   @Public()
@@ -153,10 +129,6 @@ export class AuthController {
       secure: true,
     });
 
-    return new ResponseDto<{ accessToken: string }>(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Renew access token successfully',
-    );
+    return ResponseDto.success('Renew access token successfully');
   }
 }

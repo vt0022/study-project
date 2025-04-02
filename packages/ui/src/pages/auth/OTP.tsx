@@ -1,15 +1,14 @@
 import Logo from "@/assets/images/verify.png";
 import { storeUser } from "@/redux/slices/userSlice";
 import authService from "@/services/authService";
-import { toastOptions } from "@/utils/toastOptions";
 import {
-    Avatar,
-    Box,
-    Button,
-    Container,
-    Stack,
-    TextField,
-    Typography
+  Avatar,
+  Box,
+  Button,
+  Container,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -76,9 +75,9 @@ function OTP() {
   const onSubmit = async (data) => {
     const response = await authService.verify(email, data.code);
     if (response.statusCode !== 200) {
-      toast.error(response.message, toastOptions);
+      toast.error(response.message);
     } else {
-      toast.success("You are now logging in", toastOptions);
+      toast.success("You are now logging in");
       // Get user data from response
       const user: User = response.data.user;
       // Store and persist user data

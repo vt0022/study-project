@@ -1,7 +1,7 @@
 import PreviewImage from "@/components/post/PreviewImage";
+import QueryConstants from "@/constants/queryConstants";
 import { usePrivateAxios } from "@/hooks/usePrivateAxios";
 import postService from "@/services/postService";
-import { toastOptions } from "@/utils/toastOptions";
 import {
   ImageOutlined,
   LockPersonOutlined,
@@ -70,11 +70,11 @@ function EditSection({
       postService.updatePost(postId, formData),
     onSuccess: (response) => {
       if (response.statusCode === 200) {
-        // toast.success("Your post is ready", toastOptions);
+        // toast.success("Your post is ready");
         reset();
         setPreview("");
         onClose();
-        queryClient.setQueryData(["myPostList"], (oldData) => {
+        queryClient.setQueryData([QueryConstants.MY_POST_LIST], (oldData) => {
           if (!oldData) {
             return oldData;
           }
@@ -92,11 +92,11 @@ function EditSection({
           };
         });
       } else {
-        toast.error("Error editting your post", toastOptions);
+        toast.error("Error editting your post");
       }
     },
     onError: (error) => {
-      toast.error("Error creating your post", toastOptions);
+      toast.error("Error creating your post");
       console.log("Upload failed: ", error);
     },
   });

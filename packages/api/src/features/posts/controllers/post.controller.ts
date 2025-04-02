@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -15,7 +14,6 @@ import { ApiBody, ApiConsumes, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CurrentUser } from 'src/common/decorators/currentUser.decorator';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { ResponseDto } from 'src/common/dto/response.dto';
-import { ResponseStatus } from 'src/common/enums/responseStatus.enum';
 import { SortOptions } from 'src/common/enums/sortOption.enum';
 import { PaginationOptions } from 'src/common/pagination/pagination.option';
 import { AddPostDto } from '../dto/addPost.dto';
@@ -57,12 +55,7 @@ export class PostController {
       file,
     );
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Create post successfully',
-      detailPostDto,
-    );
+    return ResponseDto.success('Create post successfully', detailPostDto);
   }
 
   @ApiOperation({ summary: 'Get posts for news feed' })
@@ -78,12 +71,7 @@ export class PostController {
       paginationOptions,
     );
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Get posts for user successfully',
-      postDtoList,
-    );
+    return ResponseDto.success('Get posts for user successfully', postDtoList);
   }
 
   @ApiOperation({ summary: "Get current user's post" })
@@ -99,9 +87,7 @@ export class PostController {
       paginationOptions,
     );
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
+    return ResponseDto.success(
       'Get posts of current user successfully',
       postDtoList,
     );
@@ -115,11 +101,7 @@ export class PostController {
   ) {
     const like = await this.postService.likePost(postId, userId);
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      `${like ? 'Like' : 'Unlike'} post successfully`,
-    );
+    return ResponseDto.success(`${like ? 'Like' : 'Unlike'} post successfully`);
   }
 
   @ApiOperation({ summary: 'Get detail post' })
@@ -127,12 +109,7 @@ export class PostController {
   async getDetailPost(@Param('id') id: number): Promise<ResponseDto<any>> {
     const detailPostDto = await this.postService.getDetailPost(id);
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Get detail post successfully',
-      detailPostDto,
-    );
+    return ResponseDto.success('Get detail post successfully', detailPostDto);
   }
 
   @ApiQuery({
@@ -162,12 +139,7 @@ export class PostController {
     };
     const postDtoList = await this.postService.getAllPosts(paginationOptions);
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Get all post successfully',
-      postDtoList,
-    );
+    return ResponseDto.success('Get all post successfully', postDtoList);
   }
 
   @ApiConsumes('multipart/form-data')
@@ -201,12 +173,7 @@ export class PostController {
       file,
     );
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Edit post successfully',
-      detailPostDto,
-    );
+    return ResponseDto.success('Edit post successfully', detailPostDto);
   }
 
   @ApiOperation({ summary: 'Delete post' })
@@ -215,10 +182,6 @@ export class PostController {
   async deletePost(@Param('id') id: number) {
     await this.postService.deletePost(id);
 
-    return new ResponseDto(
-      ResponseStatus.Success,
-      HttpStatus.OK,
-      'Delete post successfully',
-    );
+    return ResponseDto.success('Delete post successfully');
   }
 }

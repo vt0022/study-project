@@ -1,6 +1,6 @@
 import Logo from "@/assets/images/register.png";
+import AppConstants from "@/constants/appConstants";
 import authService from "@/services/authService";
-import { toastOptions } from "@/utils/toastOptions";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   Avatar,
@@ -16,7 +16,7 @@ import {
   OutlinedInput,
   Stack,
   TextField,
-  Typography
+  Typography,
 } from "@mui/material";
 import React, { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -54,7 +54,7 @@ function Register() {
       data.lastName
     );
     if (response.statusCode !== 200) {
-      toast.error(response.message, toastOptions);
+      toast.error(response.message);
     } else {
       navigate("/verify", { state: { email: data.email } });
     }
@@ -128,7 +128,7 @@ function Register() {
               rules={{
                 required: "Please enter your email",
                 pattern: {
-                  value: /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/,
+                  value: AppConstants.EMAIL_REGEX,
                   message: "Invalid email format",
                 },
               }}

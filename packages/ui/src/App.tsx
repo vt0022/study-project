@@ -5,7 +5,7 @@ import "@fontsource/roboto/700.css";
 import "./App.css";
 import RootRoutes from "./routes/RootRoutes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
- import { ToastContainer } from "react-toastify";
+import { ToastContainer, Zoom } from "react-toastify";
 import moment from "moment";
 import "moment/locale/vi";
 
@@ -18,7 +18,19 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="App">
         <RootRoutes />
-        <ToastContainer />
+        <ToastContainer
+          position="bottom-center"
+          autoClose={1500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick={false}
+          rtl={false}
+          pauseOnFocusLoss={false}
+          draggable
+          pauseOnHover={false}
+          theme="light"
+          transition={Zoom}
+        />
       </div>
     </QueryClientProvider>
   );

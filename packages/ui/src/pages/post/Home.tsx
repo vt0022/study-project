@@ -11,8 +11,17 @@ import {
   Typography,
 } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, ComponentType } from "react";
 import { useInView } from "react-intersection-observer";
+import {
+  VariableSizeList as _VariableSizeList,
+  VariableSizeListProps,
+} from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer";
+import InfiniteLoader from "react-window-infinite-loader";
+import QueryConstants from "@/constants/queryConstants";
+
+const List = _VariableSizeList as ComponentType<VariableSizeListProps>;
 
 function Home() {
   usePrivateAxios();
@@ -25,7 +34,7 @@ function Home() {
     isFetching,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ["homePostList"],
+    queryKey: [QueryConstants.HOME_POST_LIST],
     queryFn: ({ pageParam = 1 }) => postService.getPostsForUser(pageParam, 2),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -36,16 +45,26 @@ function Home() {
     refetchOnWindowFocus: false,
   });
 
-  const { ref, inView } = useInView({
-    threshold: 1,
-    triggerOnce: false,
-  });
+  // const { ref, inView } = useInView({
+  //   threshold: 1,
+  //   triggerOnce: false,
+  // });
 
-  useEffect(() => {
-    if (inView) {
-      fetchNextPage();
-    }
-  }, [inView]);
+  // useEffect(() => {
+  //   if (inView) {
+  //     fetchNextPage();
+  //   }
+  // }, [inView]);
+
+  const postList = data?.pages?.flatMap((page) => page?.data?.data) || [];
+
+  const totalPosts = data?.pages[0]?.data?.metadata?.totalItems || 0;
+
+  const isItemLoaded = (index: number) => !!postList[index];
+
+  const loadMoreItems = (startIndex: number, stopIndex: number) => {
+    fetchNextPage();
+  };
 
   return (
     <Stack
@@ -90,30 +109,52 @@ function Home() {
           <CircularProgress />
         </Box>
       ) : (
-        <Box>
-          {data?.pages.map((page, index) => (
-            <Fragment key={index}>
-              {page?.data?.data.map((post) => (
-                <Post
-                  key={post.id}
-                  id={post.id}
-                  firstName={post.user.firstName}
-                  lastName={post.user.lastName}
-                  avatar=""
-                  content={post.content}
-                  date={post.createdAt}
-                  imageUrl={post.imageUrl}
-                  thumbnailUrl={post.thumbnailUrl}
-                  isPrivate={post.isPrivate}
-                  isLiked={post.isLiked}
-                  totalLikes={post.totalLikes}
-                  totalComments={post.totalComments}
-                />
-              ))}
-            </Fragment>
-          ))}
+        <Box sx={{ height: "100%", flex: "1" }}>
+          <AutoSizer>
+            {({ height, width }) => (
+              <InfiniteLoader
+                isItemLoaded={isItemLoaded}
+                itemCount={totalPosts}
+                loadMoreItems={loadMoreItems}
+                // threshold={15} // No of items from end to trigger load more
+              >
+                {({ onItemsRendered, ref }) => (
+                  <List
+                    height={height}
+                    itemCount={postList.length}
+                    itemSize={() => 550}
+                    width={width}
+                    ref={ref}
+                    onItemsRendered={onItemsRendered}
+                  >
+                    {({ index, style }) => {
+                      const post = postList[index];
 
-          <Box ref={ref} />
+                      return (
+                        <div style={style}>
+                          <Post
+                            key={post.id}
+                            id={post.id}
+                            firstName={post.user.firstName}
+                            lastName={post.user.lastName}
+                            avatar=""
+                            content={post.content}
+                            date={post.createdAt}
+                            imageUrl={post.imageUrl}
+                            thumbnailUrl={post.thumbnailUrl}
+                            isPrivate={post.isPrivate}
+                            isLiked={post.isLiked}
+                            totalLikes={post.totalLikes}
+                            totalComments={post.totalComments}
+                          />
+                        </div>
+                      );
+                    }}
+                  </List>
+                )}
+              </InfiniteLoader>
+            )}
+          </AutoSizer>
 
           {isFetchingNextPage && (
             <Box sx={{ margin: "auto" }}>
